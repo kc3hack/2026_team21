@@ -42,6 +42,13 @@ origin  git@github.com:kc3hack/2026_team21 (push)
 $ git remote add yaken https://github.com/yaken-org/kc3hack-team-1
 ```
 
+### (VSCode ユーザー向け) Workspace で開く
+
+```sh
+$ code .vscode/team21.code-workspace
+```
+
+GUIからの場合は「ファイル」→「ファイルでワークスペースを開く」から、`.vscode/team21.code-workspace` を選択してください。
 
 ### 起動
 
