@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "preinstall": "npx only-allow pnpm"
   },
   "dependencies": {
     "next": "catalog:",
