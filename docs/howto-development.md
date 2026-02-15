@@ -54,7 +54,7 @@ git config core.hooksPath .githooks/
 $ git remote add yaken https://github.com/yaken-org/kc3hack-team-1
 ```
 
-### (任意: VSCode ユーザー向け) Workspace で開く
+### (VSCodeユーザーは必須) Workspace で開く
 
 ```sh
 $ code .vscode/charm.code-workspace
