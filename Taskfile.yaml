@@ -1,0 +1,22 @@
+version: "3"
+
+env:
+  DATABASE_URL: "postgres://example:example@127.0.0.1:5432/example?search_path=public"
+  DEV_DATABASE_URL: "docker://postgres/16/dev?search_path=public"
+
+tasks:
+  atlas:diff:
+    silent: true
+    vars:
+      NAME: '{{default "" .NAME }}'
+    cmds:
+      - test -n "{{ .NAME }}" || (echo "NAMEが指定されていません。 task atlas:diff NAME=\"sample\" のようにマイグレーション名を指定してください。" 1>&2 && exit 1)
+      - atlas --config file://db/atlas.hcl migrate diff --env local {{ .NAME }}
+
+  atlas:apply:
+    silent: true
+    cmds:
+      - docker compose up -d postgres
+      - until [ "$(docker inspect -f '{{ print "{{.State.Health.Status}}" }}' unichan-postgres)" = "healthy" ]; do echo "Waiting for Postgres..."; sleep 1; done
+      - atlas --config file://db/atlas.hcl migrate apply --env local {{ .CLI_ARGS }}
+      - docker compose down postgres

@@ -1,0 +1,12 @@
+CREATE TABLE "user_accounts" (
+    "id" UUID NOT NULL,
+
+    "name" VARCHAR(255) NOT NULL UNIQUE,
+
+    "display_name" VARCHAR(255) DEFAULT NULL,
+
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY ("id")
+);

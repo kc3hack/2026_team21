@@ -48,6 +48,9 @@
     },
     "[yaml]": {
       "editor.tabSize": 2
+    },
+    "[hcl]": {
+      "editor.tabSize": 2
     }
   }
 }
