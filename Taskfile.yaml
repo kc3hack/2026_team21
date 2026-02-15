@@ -5,6 +5,11 @@ env:
   DEV_DATABASE_URL: "docker://postgres/16/dev?search_path=public"
 
 tasks:
+  atlas:migrate:
+    silent: true
+    cmds:
+      - atlas --config file://db/atlas.hcl migrate --env local {{ .CLI_ARGS }}
+
   atlas:diff:
     silent: true
     vars:
