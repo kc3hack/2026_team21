@@ -1,0 +1,53 @@
+{
+  "folders": [
+    {
+      "path": ".."
+    }
+  ],
+  "settings": {
+    "files.associations": {
+      "wrangler.json": "jsonc",
+      "*.css": "tailwindcss"
+    },
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+      "**/CVS": true,
+      "**/.ruby-lsp": true,
+      "**/node_modules": true
+    },
+    "editor.codeActionsOnSave": {
+      "source.fixAll.biome": "explicit",
+      "source.organizeImports.biome": "explicit",
+      "source.action.useSortedProperties.biome": "explicit"
+    },
+    "javascript.preferences.importModuleSpecifier": "non-relative",
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    "[javascript]": {
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[javascriptreact]": {
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescript]": {
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescriptreact]": {
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[css]": {
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[yaml]": {
+      "editor.tabSize": 2
+    }
+  }
+}
