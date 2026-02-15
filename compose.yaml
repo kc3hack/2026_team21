@@ -6,14 +6,14 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: example
-      POSTGRES_USER: example
-      POSTGRES_PASSWORD: example
+      POSTGRES_DB: charm
+      POSTGRES_USER: charm
+      POSTGRES_PASSWORD: charm
       TZ: Asia/Tokyo
     volumes:
       - ./tmp/pg:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U example"]
+      test: ["CMD-SHELL", "pg_isready -U charm"]
       interval: 2s
       timeout: 5s
       retries: 10

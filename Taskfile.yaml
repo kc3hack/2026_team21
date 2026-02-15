@@ -1,7 +1,7 @@
 version: "3"
 
 env:
-  DATABASE_URL: "postgres://example:example@127.0.0.1:5432/example?search_path=public"
+  DATABASE_URL: "postgres://charm:charm@127.0.0.1:5432/charm?search_path=public"
   DEV_DATABASE_URL: "docker://postgres/16/dev?search_path=public"
 
 tasks:

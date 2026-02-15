@@ -1,5 +1,5 @@
 env "local" {
-  url = "postgres://example:example@127.0.0.1:5432/example?sslmode=disable"
+  url = "postgres://charm:charm@127.0.0.1:5432/charm?sslmode=disable"
   dev = "docker://postgres/16/dev"
 
   schema {
