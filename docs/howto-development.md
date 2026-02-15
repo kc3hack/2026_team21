@@ -46,24 +46,7 @@ chmod +x .githooks/*
 git config core.hooksPath .githooks/
 ```
 
-### リポジトリをミラーする
-
-origin に push した時の remote を増やす。
-
-```sh
-$ git remote set-url --add --push origin git@github.com:yaken-org/kc3hack-team-1
-
-$ git remote -v
-origin  git@github.com:kc3hack/2026_team21 (fetch)
-origin  git@github.com:yaken-org/kc3hack-team-1 (push)
-origin  git@github.com:kc3hack/2026_team21 (push)
-```
-
-もし`git remote -v`の出力結果が上記と異なる場合、以下のコマンドを実行する。
-```sh
-$ git remote set-url --add --push origin https://github.com/kc3hack/2026_team21
-```
-
+### (任意) リポジトリをミラーする
 
 追加でリモートを追加しておくと個別対応できて便利です。
 
@@ -71,7 +54,7 @@ $ git remote set-url --add --push origin https://github.com/kc3hack/2026_team21
 $ git remote add yaken https://github.com/yaken-org/kc3hack-team-1
 ```
 
-### (VSCode ユーザー向け) Workspace で開く
+### (任意: VSCode ユーザー向け) Workspace で開く
 
 ```sh
 $ code .vscode/charm.code-workspace
