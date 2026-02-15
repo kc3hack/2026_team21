@@ -2,6 +2,29 @@
 
 ## ローカル開発環境が起動できるまで
 
+### Docker のインストール
+
+Docker をお好みの方法でインストールしてください。
+Docker互換のランタイムでも可能です。
+
+### atlas CLI のインストール
+
+https://atlasgo.io/docs
+
+```
+curl -sSf https://atlasgo.sh | sh
+# or
+brew install ariga/tap/atlas
+```
+
+### Taskfile のインストール
+
+https://taskfile.dev/docs/installation
+
+```
+brew install go-task
+```
+
 ### Node.js のインストール
 
 Node.js をお好みの方法でインストールしてください。
@@ -53,5 +76,5 @@ GUIからの場合は「ファイル」→「ファイルでワークスペー�
 ### 起動
 
 ```
-$ pnpm dev
+$ task up
 ```

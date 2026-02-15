@@ -5,6 +5,13 @@ env:
   DEV_DATABASE_URL: "docker://postgres/16/dev?search_path=public"
 
 tasks:
+  up:
+    cmds:
+      - docker compose up -d postgres
+      - defer: docker compose --ansi off down
+      - task: atlas:apply
+      - pnpm run dev
+
   atlas:migrate:
     silent: true
     cmds:
@@ -22,6 +29,6 @@ tasks:
     silent: true
     cmds:
       - docker compose up -d postgres
-      - until [ "$(docker inspect -f '{{ print "{{.State.Health.Status}}" }}' unichan-postgres)" = "healthy" ]; do echo "Waiting for Postgres..."; sleep 1; done
+      - until docker exec charm-postgres pg_isready; do sleep 1; done
       - atlas --config file://db/atlas.hcl migrate apply --env local {{ .CLI_ARGS }}
       - docker compose down postgres
