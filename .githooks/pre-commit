@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# 禁止したいブランチ名
+PROTECTED_BRANCHES="main master develop release"
+
+# 現在のブランチを取得
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# 禁止ブランチなら確認
+if echo "$PROTECTED_BRANCHES" | grep -qw "$CURRENT_BRANCH"; then
+    echo "⚠️  $CURRENT_BRANCH への Commit です。"
+    echo "本当に Commit しますか？ (yes/no)"
+
+    # 標準入力を `/dev/tty` に変更
+    read -r answer < /dev/tty
+
+    case "$answer" in
+        [Yy]|[Yy][Ee][Ss])
+            echo "コミットを続行します。"
+            exit 0
+            ;;
+        *)
+            echo "コミットを中止しました。"
+            exit 1
+            ;;
+    esac
+fi
+
+exit 0
