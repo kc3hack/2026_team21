@@ -3,7 +3,7 @@ name: ci-typescript
 on:
   push:
     branches:
-      - development
+      - develop
   pull_request:
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version-file: ".node-version"
           cache: "pnpm"
-          cache-dependency-path: ./app/frontier/pnpm-lock.yaml
+          cache-dependency-path: ./pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install
@@ -37,3 +37,6 @@ jobs:
 
       - name: lint
         run: pnpm run lint
+
+      - name: test
+        run: pnpm run test

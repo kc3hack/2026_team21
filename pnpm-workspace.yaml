@@ -1,24 +1,13 @@
 packages:
   - packages/**/*
   - apps/**/*
-catalogMode: strict
-cleanupUnusedCatalogs: true
-dedupeInjectedDeps: true
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
-injectWorkspacePackages: true
-linkWorkspacePackages: true
-minimumReleaseAge: 10080
-preferWorkspacePackages: true
-saveWorkspaceProtocol: false
-sharedWorkspaceLockfile: true
+
 catalog:
-  "@biomejs/biome": 2.3.13
-  "@tailwindcss/postcss": ^4
-  "@types/node": ^20
-  "@types/react": ^19
-  "@types/react-dom": ^19
+  '@biomejs/biome': 2.3.13
+  '@tailwindcss/postcss': ^4
+  '@types/node': ^20
+  '@types/react': ^19
+  '@types/react-dom': ^19
   babel-plugin-react-compiler: 1.0.0
   next: 16.1.6
   npm-run-all2: 8.0.4
@@ -26,3 +15,26 @@ catalog:
   react-dom: 19.2.3
   tailwindcss: ^4
   typescript: ^5
+  vitest: ^4.0.18
+
+catalogMode: strict
+
+cleanupUnusedCatalogs: true
+
+dedupeInjectedDeps: true
+
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
+
+injectWorkspacePackages: true
+
+linkWorkspacePackages: true
+
+minimumReleaseAge: 10080
+
+preferWorkspacePackages: true
+
+saveWorkspaceProtocol: false
+
+sharedWorkspaceLockfile: true
