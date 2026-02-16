@@ -1,0 +1,37 @@
+{
+  "name": "nico",
+  "productName": "nico",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": ".vite/build/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint --ext .ts,.tsx ."
+  },
+  "keywords": [],
+  "author": {
+    "name": "Koki Matsumoto",
+    "email": "85651386+rokuosan@users.noreply.github.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "electron-squirrel-startup": "catalog:"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "catalog:",
+    "@electron-forge/maker-deb": "catalog:",
+    "@electron-forge/maker-rpm": "catalog:",
+    "@electron-forge/maker-squirrel": "catalog:",
+    "@electron-forge/maker-zip": "catalog:",
+    "@electron-forge/plugin-auto-unpack-natives": "catalog:",
+    "@electron-forge/plugin-fuses": "catalog:",
+    "@electron-forge/plugin-vite": "catalog:",
+    "@electron/fuses": "catalog:",
+    "@types/electron-squirrel-startup": "catalog:",
+    "electron": "catalog:"
+  }
+}

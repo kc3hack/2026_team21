@@ -22,5 +22,11 @@
   "devDependencies": {
     "@biomejs/biome": "catalog:",
     "npm-run-all2": "catalog:"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "electron-winstaller"
+    ]
   }
 }
