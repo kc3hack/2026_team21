@@ -16,6 +16,7 @@ catalog:
   tailwindcss: ^4
   typescript: ^5
   vitest: ^4.0.18
+  wrangler: ^4.63.0
 
 catalogMode: strict
 
