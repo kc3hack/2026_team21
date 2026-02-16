@@ -1,52 +1,369 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import DatePicker from "react-datepicker";
+import { ja } from "date-fns/locale";
+import "react-datepicker/dist/react-datepicker.css";
+import { toJapaneseDate, toJapaneseDateWithAge, getCurrentJapaneseDate } from "@/utils/japaneseDate";
+
+interface HistoryEntry {
+  year: string;
+  month: string;
+  content: string;
+}
+
+interface LicenseEntry {
+  year: string;
+  month: string;
+  content: string;
+}
 
 export default function Home() {
-	return (
-		<div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-			<main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-				<Image className="dark:invert" src="/next.svg" alt="Next.js logo" width={180} height={38} priority />
-				<ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-					<li className="mb-2 tracking-[-.01em]">
-						Get started by editing{" "}
-						<code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-							src/app/page.tsx
-						</code>
-						.
-					</li>
-					<li className="tracking-[-.01em]">Save and see your changes instantly.</li>
-				</ol>
+  const router = useRouter();
+  const [currentDate, setCurrentDate] = useState<Date | null>(new Date());
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
 
-				<div className="flex gap-4 items-center flex-col sm:flex-row">
-					<a
-						className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-						href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Read our docs
-					</a>
-				</div>
-			</main>
-			<footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image aria-hidden src="/file.svg" alt="File icon" width={16} height={16} />
-					Learn
-				</a>
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
-					Go to nextjs.org →
-				</a>
-			</footer>
-		</div>
-	);
+  const [formData, setFormData] = useState({
+    date: getCurrentJapaneseDate(),
+    nameKana: "",
+    nameKanji: "",
+    birthDate: "",
+    age: "",
+    gender: "",
+    postalCode: "",
+    address: "",
+    phone: "",
+    email: "",
+    education: [] as HistoryEntry[],
+    career: [] as HistoryEntry[],
+    licenses: [] as LicenseEntry[],
+    motivation: "",
+    request: "",
+  });
+
+  const addEducationRow = () => {
+    setFormData({
+      ...formData,
+      education: [...formData.education, { year: "", month: "", content: "" }],
+    });
+  };
+
+  const addCareerRow = () => {
+    setFormData({
+      ...formData,
+      career: [...formData.career, { year: "", month: "", content: "" }],
+    });
+  };
+
+  const addLicenseRow = () => {
+    setFormData({
+      ...formData,
+      licenses: [...formData.licenses, { year: "", month: "", content: "" }],
+    });
+  };
+
+  const handleCurrentDateChange = (date: Date | null) => {
+    setCurrentDate(date);
+    if (date) {
+      setFormData({ ...formData, date: toJapaneseDate(date) });
+    }
+  };
+
+  const handleBirthDateChange = (date: Date | null) => {
+    setBirthDate(date);
+    if (date) {
+      const { dateStr, age } = toJapaneseDateWithAge(date);
+      setFormData({ ...formData, birthDate: `${dateStr}生`, age: `満${age}歳` });
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Base64url エンコーディング
+    const jsonString = JSON.stringify(formData);
+    const base64 = btoa(unescape(encodeURIComponent(jsonString)));
+    const base64url = base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    router.push(`/preview?data=${base64url}`);
+  };
+
+  return (
+    <div className="form-container">
+      <div className="form-wrapper">
+        <h1 className="form-title">履歴書入力フォーム</h1>
+
+        <form onSubmit={handleSubmit} className="resume-form">
+          {/* 基本情報 */}
+          <section className="form-section">
+            <h2 className="section-title-form">基本情報</h2>
+
+            <div className="form-group">
+              <label>作成日</label>
+              <DatePicker
+                selected={currentDate}
+                onChange={handleCurrentDateChange}
+                dateFormat="yyyy/MM/dd"
+                locale={ja}
+                className="datepicker-input"
+                placeholderText="日付を選択"
+              />
+              <div className="japanese-date-display">{formData.date}現在</div>
+            </div>
+
+            <div className="form-group">
+              <label>フリガナ</label>
+              <input
+                type="text"
+                placeholder="ヤマダ タロウ"
+                value={formData.nameKana}
+                onChange={(e) => setFormData({ ...formData, nameKana: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>氏名</label>
+              <input
+                type="text"
+                placeholder="山田 太郎"
+                value={formData.nameKanji}
+                onChange={(e) => setFormData({ ...formData, nameKanji: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>生年月日</label>
+              <DatePicker
+                selected={birthDate}
+                onChange={handleBirthDateChange}
+                dateFormat="yyyy/MM/dd"
+                locale={ja}
+                className="datepicker-input"
+                placeholderText="生年月日を選択"
+                showYearDropdown
+                yearDropdownItemNumber={100}
+                scrollableYearDropdown
+              />
+              <div className="japanese-date-display">
+                {formData.birthDate && `${formData.birthDate}（${formData.age}）`}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>性別</label>
+              <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value })}>
+                <option value="">選択してください</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>郵便番号</label>
+              <input
+                type="text"
+                placeholder="123-4567"
+                value={formData.postalCode}
+                onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>住所</label>
+              <input
+                type="text"
+                placeholder="東京都○○区○○ 1-2-3"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>電話番号</label>
+              <input
+                type="tel"
+                placeholder="03-1234-5678"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>メールアドレス</label>
+              <input
+                type="email"
+                placeholder="example@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+          </section>
+
+          {/* 学歴 */}
+          <section className="form-section">
+            <h2 className="section-title-form">学歴</h2>
+            {formData.education.map((entry, index) => (
+              <div key={index} className="form-row history-row">
+                <input
+                  type="text"
+                  placeholder="年"
+                  value={entry.year}
+                  onChange={(e) => {
+                    const newEducation = [...formData.education];
+                    newEducation[index].year = e.target.value;
+                    setFormData({ ...formData, education: newEducation });
+                  }}
+                  className="year-input"
+                />
+                <input
+                  type="text"
+                  placeholder="月"
+                  value={entry.month}
+                  onChange={(e) => {
+                    const newEducation = [...formData.education];
+                    newEducation[index].month = e.target.value;
+                    setFormData({ ...formData, education: newEducation });
+                  }}
+                  className="month-input"
+                />
+                <input
+                  type="text"
+                  placeholder="○○高等学校 卒業"
+                  value={entry.content}
+                  onChange={(e) => {
+                    const newEducation = [...formData.education];
+                    newEducation[index].content = e.target.value;
+                    setFormData({ ...formData, education: newEducation });
+                  }}
+                  className="content-input"
+                />
+              </div>
+            ))}
+            <button type="button" onClick={addEducationRow} className="add-btn">
+              + 学歴を追加
+            </button>
+          </section>
+
+          {/* 職歴 */}
+          <section className="form-section">
+            <h2 className="section-title-form">職歴</h2>
+            {formData.career.map((entry, index) => (
+              <div key={index} className="form-row history-row">
+                <input
+                  type="text"
+                  placeholder="年"
+                  value={entry.year}
+                  onChange={(e) => {
+                    const newCareer = [...formData.career];
+                    newCareer[index].year = e.target.value;
+                    setFormData({ ...formData, career: newCareer });
+                  }}
+                  className="year-input"
+                />
+                <input
+                  type="text"
+                  placeholder="月"
+                  value={entry.month}
+                  onChange={(e) => {
+                    const newCareer = [...formData.career];
+                    newCareer[index].month = e.target.value;
+                    setFormData({ ...formData, career: newCareer });
+                  }}
+                  className="month-input"
+                />
+                <input
+                  type="text"
+                  placeholder="株式会社○○ 入社"
+                  value={entry.content}
+                  onChange={(e) => {
+                    const newCareer = [...formData.career];
+                    newCareer[index].content = e.target.value;
+                    setFormData({ ...formData, career: newCareer });
+                  }}
+                  className="content-input"
+                />
+              </div>
+            ))}
+            <button type="button" onClick={addCareerRow} className="add-btn">
+              + 職歴を追加
+            </button>
+          </section>
+
+          {/* 免許・資格 */}
+          <section className="form-section">
+            <h2 className="section-title-form">免許・資格</h2>
+            {formData.licenses.map((entry, index) => (
+              <div key={index} className="form-row history-row">
+                <input
+                  type="text"
+                  placeholder="年"
+                  value={entry.year}
+                  onChange={(e) => {
+                    const newLicenses = [...formData.licenses];
+                    newLicenses[index].year = e.target.value;
+                    setFormData({ ...formData, licenses: newLicenses });
+                  }}
+                  className="year-input"
+                />
+                <input
+                  type="text"
+                  placeholder="月"
+                  value={entry.month}
+                  onChange={(e) => {
+                    const newLicenses = [...formData.licenses];
+                    newLicenses[index].month = e.target.value;
+                    setFormData({ ...formData, licenses: newLicenses });
+                  }}
+                  className="month-input"
+                />
+                <input
+                  type="text"
+                  placeholder="普通自動車第一種運転免許取得"
+                  value={entry.content}
+                  onChange={(e) => {
+                    const newLicenses = [...formData.licenses];
+                    newLicenses[index].content = e.target.value;
+                    setFormData({ ...formData, licenses: newLicenses });
+                  }}
+                  className="content-input"
+                />
+              </div>
+            ))}
+            <button type="button" onClick={addLicenseRow} className="add-btn">
+              + 免許・資格を追加
+            </button>
+          </section>
+
+          {/* 志望動機・自己PR */}
+          <section className="form-section">
+            <h2 className="section-title-form">志望の動機、自己PR、趣味、特技など</h2>
+            <div className="form-group">
+              <textarea
+                rows={6}
+                placeholder="志望動機や自己PRを記入してください"
+                value={formData.motivation}
+                onChange={(e) => setFormData({ ...formData, motivation: e.target.value })}
+              />
+            </div>
+          </section>
+
+          {/* 本人希望欄 */}
+          <section className="form-section">
+            <h2 className="section-title-form">本人希望記入欄</h2>
+            <div className="form-group">
+              <textarea
+                rows={4}
+                placeholder="特に給料・職種・勤務時間・その他についての希望など"
+                value={formData.request}
+                onChange={(e) => setFormData({ ...formData, request: e.target.value })}
+              />
+            </div>
+          </section>
+
+          <button type="submit" className="submit-btn">
+            プレビューを表示
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }

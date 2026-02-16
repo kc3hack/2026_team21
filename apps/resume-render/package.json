@@ -14,8 +14,10 @@
 	},
 	"dependencies": {
 		"@opennextjs/cloudflare": "^1.15.1",
+		"date-fns": "catalog:",
 		"next": "16.1.5",
 		"react": "19.1.5",
+		"react-datepicker": "catalog:",
 		"react-dom": "19.1.5"
 	},
 	"devDependencies": {
@@ -23,6 +25,7 @@
 		"@tailwindcss/postcss": "^4",
 		"@types/node": "catalog:",
 		"@types/react": "^19.1.5",
+		"@types/react-datepicker": "catalog:",
 		"@types/react-dom": "^19.1.5",
 		"eslint": "^9",
 		"eslint-config-next": "15.4.6",
