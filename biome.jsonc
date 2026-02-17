@@ -81,5 +81,17 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/voiceocracy/**/*.tsx"],
+      "javascript": {
+        "formatter": {
+          "quoteStyle": "double",
+          "trailingCommas": "es5",
+          "semicolons": "always"
+        }
+      }
+    }
+  ]
 }
