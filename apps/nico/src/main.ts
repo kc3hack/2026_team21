@@ -1,45 +1,79 @@
 import path from "node:path";
-import { app, BrowserWindow } from "electron";
+import { serve } from "@hono/node-server";
+import { app, BrowserWindow, ipcMain, screen } from "electron";
 import started from "electron-squirrel-startup";
+import { Hono } from "hono";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
 }
 
+let mainWindow: BrowserWindow | null = null;
+
+// コマンドライン引数をチェック
+const isWindowMode = process.argv.includes("--window");
+
 const createWindow = () => {
-  // ディスプレイのサイズを取得（フルスクリーン）
-  const { screen } = require('electron');
   const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.bounds;
+
+  let windowConfig;
+
+  if (isWindowMode) {
+    // グリーンバックウィンドウモード
+    windowConfig = {
+      width: 1280,
+      height: 720,
+      transparent: false,
+      frame: true,
+      alwaysOnTop: false,
+      hasShadow: true,
+      resizable: true,
+      movable: true,
+      skipTaskbar: false,
+      backgroundColor: "#00FF00", // グリーンバック
+      webPreferences: {
+        preload: path.join(__dirname, "preload.js"),
+      },
+    };
+  } else {
+    // 透過フルスクリーンモード（デフォルト）
+    const { width, height } = primaryDisplay.bounds;
+    windowConfig = {
+      width: width,
+      height: height,
+      x: 0,
+      y: 0,
+      transparent: true,
+      frame: false,
+      alwaysOnTop: true,
+      hasShadow: false,
+      resizable: false,
+      movable: false,
+      skipTaskbar: true,
+      webPreferences: {
+        preload: path.join(__dirname, "preload.js"),
+        backgroundThrottling: false,
+      },
+    };
+  }
 
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: width,
-    height: height,
-    x: 0,
-    y: 0,
-    transparent: true, // ウィンドウを透過
-    frame: false, // フレームレスウィンドウ
-    alwaysOnTop: true, // 常に最前面
-    hasShadow: false, // 影を消す
-    resizable: false,
-    movable: false,
-    skipTaskbar: true, // タスクバーに表示しない
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      backgroundThrottling: false, // バックグラウンドでも動作
-    },
-  });
+  mainWindow = new BrowserWindow(windowConfig);
 
-  // クリックを透過（macOS）
-  mainWindow.setIgnoreMouseEvents(true);
+  // 透過モードの場合のみクリックを透過
+  if (!isWindowMode) {
+    mainWindow.setIgnoreMouseEvents(true);
+  }
 
   // and load the index.html of the app.
+  const modeParam = isWindowMode ? "?mode=window" : "";
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL + modeParam);
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), {
+      query: isWindowMode ? { mode: "window" } : {},
+    });
   }
 
   // DevToolsは透過の妨げになるのでコメントアウト
@@ -72,3 +106,33 @@ app.on("activate", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+
+// Honoサーバーを起動
+const honoApp = new Hono();
+
+honoApp.post("/comment", async (c) => {
+  const body = await c.req.json();
+  const text = body.text || "コメントなし";
+  const duration = body.duration || 5000;
+  const fontSize = body.fontSize;
+
+  // レンダラープロセスにコメントを送信
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("add-comment", { text, duration, fontSize });
+  }
+
+  return c.json({ success: true, text });
+});
+
+honoApp.get("/", (c) => {
+  return c.text("Niconico Comment Server is running!");
+});
+
+// サーバーを起動
+const PORT = 3939;
+serve({
+  fetch: honoApp.fetch,
+  port: PORT,
+});
+
+console.log(`🚀 Hono server running at http://localhost:${PORT}`);

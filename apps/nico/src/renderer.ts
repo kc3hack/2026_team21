@@ -28,7 +28,15 @@
 
 import "./index.css";
 
-console.log('👋 This message is being logged by "renderer.ts", included via Vite');
+// URLパラメータからモードを取得
+const urlParams = new URLSearchParams(window.location.search);
+const isWindowMode = urlParams.get('mode') === 'window';
+
+// ウィンドウモードの場合は背景を緑にする
+if (isWindowMode) {
+  document.documentElement.style.background = '#00FF00';
+  document.body.style.background = '#00FF00';
+}
 
 // ニコニコ風コメントシステム
 class NiconicoCommentSystem {
@@ -49,8 +57,9 @@ class NiconicoCommentSystem {
    * コメントを画面に流す
    * @param text コメントテキスト
    * @param duration アニメーション時間（ミリ秒）デフォルト5秒
+   * @param fontSize フォントサイズ（px）デフォルト24px
    */
-  addComment(text: string, duration = 5000): void {
+  addComment(text: string, duration = 5000, fontSize = 24): void {
     const comment = document.createElement("div");
     comment.className = "niconico-comment";
     comment.textContent = text;
@@ -61,6 +70,7 @@ class NiconicoCommentSystem {
 
     comment.style.top = `${top}px`;
     comment.style.animationDuration = `${duration}ms`;
+    comment.style.fontSize = `${fontSize}px`;
 
     this.container.appendChild(comment);
 
@@ -91,26 +101,6 @@ class NiconicoCommentSystem {
 // グローバルに公開
 const commentSystem = new NiconicoCommentSystem("comment-container");
 
-// テスト用：自動的にコメントを流す
-const testMessages = [
-  "AIが頑張ってます！",
-  "コード書いてます〜",
-  "ビルド中...",
-  "デバッグしてるよ！",
-  "もうすぐ完成！",
-  "エラー修正中...",
-  "リファクタリング中",
-  "テスト実行中",
-  "データベース接続中...",
-  "API叩いてます！",
-];
-
-// 3秒ごとにランダムなコメントを流す
-setInterval(() => {
-  const randomMessage = testMessages[Math.floor(Math.random() * testMessages.length)];
-  commentSystem.addComment(randomMessage);
-}, 3000);
-
 // 起動時に1つ流す
 setTimeout(() => {
   commentSystem.addComment("ニコニココメントシステム起動！");
@@ -119,10 +109,20 @@ setTimeout(() => {
 // グローバルに公開して外部から使えるようにする
 declare global {
   interface Window {
-    addNiconicoComment: (text: string, duration?: number) => void;
+    addNiconicoComment: (text: string, duration?: number, fontSize?: number) => void;
+    electronAPI?: {
+      onAddComment: (callback: (data: { text: string; duration: number; fontSize?: number }) => void) => void;
+    };
   }
 }
 
-window.addNiconicoComment = (text: string, duration?: number) => {
-  commentSystem.addComment(text, duration);
+window.addNiconicoComment = (text: string, duration?: number, fontSize?: number) => {
+  commentSystem.addComment(text, duration, fontSize);
 };
+
+// IPC経由でコメントを受け取る
+if (window.electronAPI) {
+  window.electronAPI.onAddComment((data) => {
+    commentSystem.addComment(data.text, data.duration, data.fontSize);
+  });
+}

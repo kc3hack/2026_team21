@@ -90,3 +90,8 @@ typings/
 
 # Electron-Forge
 out/
+
+# Claude Code hooks logs
+.claude/logs/
+/tmp/hook-debug.log
+/tmp/send-comment.log

@@ -13,6 +13,7 @@ catalog:
   '@electron-forge/plugin-fuses': ^7.11.1
   '@electron-forge/plugin-vite': ^7.11.1
   '@electron/fuses': ^1.8.0
+  '@hono/node-server': ^1.19.9
   '@tailwindcss/postcss': ^4
   '@types/electron-squirrel-startup': ^1.0.2
   '@types/node': ^20
@@ -21,6 +22,7 @@ catalog:
   babel-plugin-react-compiler: 1.0.0
   electron: 40.2.1
   electron-squirrel-startup: ^1.0.1
+  hono: ^4.11.9
   next: 16.1.6
   npm-run-all2: 8.0.4
   react: 19.2.3
