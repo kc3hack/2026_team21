@@ -1,29 +1,36 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 
 // Web Speech APIの型定義
 interface IWindow extends Window {
+  // biome-ignore lint/suspicious/noExplicitAny: Web Speech API types
   webkitSpeechRecognition: any;
+  // biome-ignore lint/suspicious/noExplicitAny: Web Speech API types
   SpeechRecognition: any;
 }
 
-// 各変数の定義
 export const useVoiceInput = () => {
   const [text, setText] = useState<string>("");
   const [volume, setVolume] = useState<number>(0);
   const [isListening, setIsListening] = useState(false);
-  const [finalTranscript, setFinalTranscript] = useState<{ text: string; volume: number } | null>(null);
+  const [finalTranscript, setFinalTranscript] = useState<{
+    text: string;
+    volume: number;
+  } | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
+  // biome-ignore lint/suspicious/noExplicitAny: Web Speech API types
   const recognitionRef = useRef<any>(null);
   const maxVolumeRef = useRef<number>(0); // 一番デカかった瞬間の音量を保持
 
   const startAudioAnalysis = async () => {
     try {
-        // マイクの使用許可
+      // マイクの使用許可
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // biome-ignore lint/suspicious/noExplicitAny: Vendor prefix handling
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
       const analyser = audioContext.createAnalyser();
       const source = audioContext.createMediaStreamSource(stream);
 
@@ -41,6 +48,7 @@ export const useVoiceInput = () => {
       // ループ処理開始
       updateVolume();
     } catch (err) {
+      // biome-ignore lint/suspicious/noConsole: Error logging allowed
       console.error("マイクエラー:", err);
     }
   };
@@ -49,11 +57,12 @@ export const useVoiceInput = () => {
     if (!analyserRef.current || !dataArrayRef.current) return;
 
     // 分析機から現在のデータを配列にコピー
-    analyserRef.current.getByteFrequencyData(dataArrayRef.current as any); // as any で回避
+    // biome-ignore lint/suspicious/noExplicitAny: Type mismatch between DOM and TS lib
+    analyserRef.current.getByteFrequencyData(dataArrayRef.current as any);
 
     let sum = 0;
     // 平均値の計算ロジック
-    const speechRange = Math.floor(dataArrayRef.current.length / 2); 
+    const speechRange = Math.floor(dataArrayRef.current.length / 2);
     for (let i = 0; i < speechRange; i++) {
       sum += dataArrayRef.current[i];
     }
@@ -63,7 +72,7 @@ export const useVoiceInput = () => {
     // 叫び声を強調するためリニアで調整
     const noiseFloor = 30;
     const rawVolume = Math.max(0, average - noiseFloor);
-    const normalizedVolume = Math.min((rawVolume * 1.5), 150); // 最大150
+    const normalizedVolume = Math.min(rawVolume * 1.5, 150); // 最大150
 
     setVolume(normalizedVolume);
 
@@ -77,7 +86,8 @@ export const useVoiceInput = () => {
   };
 
   const startSpeechRecognition = useCallback(() => {
-    const { webkitSpeechRecognition, SpeechRecognition } = window as unknown as IWindow;
+    const { webkitSpeechRecognition, SpeechRecognition } =
+      window as unknown as IWindow;
     // Web Speech API呼び出し
     const Recognition = SpeechRecognition || webkitSpeechRecognition;
 
@@ -94,6 +104,7 @@ export const useVoiceInput = () => {
     };
 
     // なんか聞こえたら開始
+    // biome-ignore lint/suspicious/noExplicitAny: Event type
     recognition.onresult = (event: any) => {
       const results = event.results;
       const latestResult = results[results.length - 1];
@@ -101,7 +112,6 @@ export const useVoiceInput = () => {
 
       if (latestResult.isFinal) {
         // 文節確定時の処理
-        // 喋った内容とその間の最大音量を出力
         setFinalTranscript({ text: transcript, volume: maxVolumeRef.current });
         setText("");
         maxVolumeRef.current = 0;
@@ -119,15 +129,15 @@ export const useVoiceInput = () => {
   }, [isListening]);
 
   const start = () => {
-    startAudioAnalysis();
+    void startAudioAnalysis();
     startSpeechRecognition();
   };
 
-  return { 
-  volume, 
-  currentText: text, 
-  finalTranscript, 
-  start, 
-  isListening 
-};
+  return {
+    volume,
+    currentText: text,
+    finalTranscript,
+    start,
+    isListening,
+  };
 };
