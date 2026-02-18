@@ -32,7 +32,8 @@ injectWorkspacePackages: true
 linkWorkspacePackages: true
 
 minimumReleaseAge: 10080
-
+minimumReleaseAgeExclude:
+  - hono  
 preferWorkspacePackages: true
 
 saveWorkspaceProtocol: false
