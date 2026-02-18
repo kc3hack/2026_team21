@@ -81,5 +81,21 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/web/**/*.tsx", "apps/web/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noHeadElement": "off"
+          }
+        },
+        "domains": {
+          "react": "recommended",
+          "test": "recommended"
+        }
+      }
+    }
+  ]
 }
