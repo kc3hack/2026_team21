@@ -24,12 +24,10 @@ export default function Home() {
 
       setMessages((prev) => {
         let size = 2 + inputVolume / 15;
-
         if (inputVolume > 100) size *= 1.5;
 
         const top = 10 + Math.random() * 80;
         const left = 5 + Math.random() * 90;
-
         const rotation = Math.random() * 30 - 15;
 
         const newMessage: Message = {
@@ -60,11 +58,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* リアルタイムインジケータ（画面下部固定） */}
+      {/* リアルタイムインジケータ */}
       {isListening && (
         <div className="absolute bottom-10 w-full text-center text-gray-500 z-[9999] pointer-events-none">
           <div className="inline-block bg-black/50 px-4 py-2 rounded">
-            {/* 音量バーの可視化 */}
             <div className="w-64 h-2 bg-gray-800 rounded-full mx-auto mb-2 overflow-hidden">
               <div
                 className="h-full bg-white transition-all duration-75"
@@ -83,40 +80,24 @@ export default function Home() {
         <div
           key={msg.id}
           className="absolute whitespace-nowrap font-black text-white animate-slam"
-          style={{
-            fontSize: `${msg.size}rem`,
-            zIndex: msg.zIndex,
-            top: `${msg.top}%`,
-            left: `${msg.left}%`,
-            // 中央基準で配置して回転させる
-            transform: `translate(-50%, -50%) rotate(${msg.rotation}deg)`,
-            textShadow: "0 4px 20px rgba(0,0,0,0.8)",
-          }}
+          style={
+            {
+              fontSize: `${msg.size}rem`,
+              zIndex: msg.zIndex,
+              top: `${msg.top}%`,
+              left: `${msg.left}%`,
+              // 回転角度をCSS変数として渡す
+              "--slam-rotate": `${msg.rotation}deg`,
+              // fallbackとしてtransformも維持
+              transform: `translate(-50%, -50%) rotate(${msg.rotation}deg)`,
+              textShadow: "0 4px 20px rgba(0,0,0,0.8)",
+            } as React.CSSProperties
+          }
         >
           {msg.text}
         </div>
       ))}
 
-      <style jsx global>{`
-        @keyframes slam {
-          0% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(2.5) rotate(0deg);
-            filter: blur(10px);
-          }
-          15% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.0) rotate(var(--tw-rotate));
-            filter: blur(0);
-          }
-          100% {
-            opacity: 1;
-          }
-        }
-        .animate-slam {
-          animation: slam 0.3s cubic-bezier(0.1, 0.9, 0.2, 1.0) forwards;
-        }
-      `}</style>
     </main>
   );
 }
