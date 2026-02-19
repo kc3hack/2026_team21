@@ -11,9 +11,7 @@ app.use(renderer);
 app.get("/", (c) => {
   return c.render(
     <Layout>
-      <a href="/new">
-        <button type="button">Create Room</button>
-      </a>
+      <a href="/new">Create Room</a>
     </Layout>,
   );
 });
