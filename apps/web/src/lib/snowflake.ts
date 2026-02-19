@@ -15,10 +15,8 @@ export function generateSnowflakeId(): string {
   if (timestamp === lastTimestamp) {
     sequence = (sequence + 1n) & MAX_SEQUENCE;
     if (sequence === 0n) {
-      // Wait for next millisecond
-      while (timestamp <= lastTimestamp) {
-        timestamp = BigInt(Date.now()) - EPOCH;
-      }
+      // Move to the next logical millisecond instead of busy-waiting
+      timestamp = lastTimestamp + 1n;
     }
   } else {
     sequence = 0n;
