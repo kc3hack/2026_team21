@@ -24,10 +24,7 @@ export function generateSnowflakeId(): string {
 
   lastTimestamp = timestamp;
 
-  const id =
-    (timestamp << (WORKER_ID_BITS + SEQUENCE_BITS)) |
-    (workerId << SEQUENCE_BITS) |
-    sequence;
+  const id = (timestamp << (WORKER_ID_BITS + SEQUENCE_BITS)) | (workerId << SEQUENCE_BITS) | sequence;
 
   return id.toString();
 }
