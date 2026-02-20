@@ -3,7 +3,7 @@ import { Layout } from "@/pages/layout";
 
 const app = new Hono();
 
-app.post("/:roomId?", async (c) => {
+app.post("/:roomId", async (c) => {
   const formData = await c.req.formData();
   const file = formData.get("file") as File;
   const backTo = formData.get("back_to");
@@ -15,8 +15,8 @@ app.post("/:roomId?", async (c) => {
   return c.redirect(backTo?.toString() || c.req.path || "/");
 });
 
-app.get("/:roomId?", (c) => {
-  const roomId = c.req.param("roomId") || "room";
+app.get("/:roomId", (c) => {
+  const roomId = c.req.param("roomId");
   const currentPath = c.req.path;
 
   return c.render(
