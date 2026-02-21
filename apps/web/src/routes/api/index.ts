@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { WorkerEnv } from "@/app";
 import { generateCloudflareTurnCredentials } from "@/lib/cloudflare-turn";
+import { createShortcodeForRoom, getSnowflakeIdFromShortcode } from "@/lib/room-shortcode";
 import { generateSnowflakeId } from "@/lib/snowflake";
 
 const app = new Hono<WorkerEnv>();
@@ -12,9 +13,27 @@ app.get("/ws/:roomId", (c) => {
   return stub.fetch(c.req.raw);
 });
 
-app.post("/rooms", (c) => {
+app.post("/rooms", async (c) => {
   const id = generateSnowflakeId();
-  return c.json({ id });
+  const shortcode = await createShortcodeForRoom(c.env.ROOM_MAPPING_KV, id);
+  return c.json({ id, shortcode });
+});
+
+app.get("/rooms/:shortcode", async (c) => {
+  const shortcode = c.req.param("shortcode");
+
+  // 6桁の数字かチェック
+  if (!/^\d{6}$/.test(shortcode)) {
+    return c.json({ error: "Invalid shortcode format" }, 400);
+  }
+
+  const snowflakeId = await getSnowflakeIdFromShortcode(c.env.ROOM_MAPPING_KV, shortcode);
+
+  if (!snowflakeId) {
+    return c.json({ error: "Room not found or expired" }, 404);
+  }
+
+  return c.json({ id: snowflakeId, shortcode });
 });
 
 app.post("/turn/credentials", async (c) => {

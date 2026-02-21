@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import type { WorkerEnv } from "@/app";
 import type { ClientMessage, ServerMessage } from "@/lib/realtime/types";
+import { touchShortcode } from "@/lib/room-shortcode";
 
 type PendingSignals = {
   offer: string | null;
@@ -15,6 +16,15 @@ const MAX_CANDIDATES = 128;
 const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000;
 
 export class DoorMan extends DurableObject<WorkerEnv["Env"]> {
+  snowflakeId: string;
+
+  constructor(ctx: DurableObjectState, env: WorkerEnv["Env"], snowflakeId: string) {
+    // Required, as we are extending the base class.
+    super(ctx, env);
+
+    this.snowflakeId = snowflakeId;
+  }
+
   async fetch(request: Request): Promise<Response> {
     if (!isWebSocketUpgrade(request)) {
       return new Response("Expected Upgrade: websocket", { status: 426 });
@@ -149,6 +159,9 @@ export class DoorMan extends DurableObject<WorkerEnv["Env"]> {
     const now = Date.now();
     await this.ctx.storage.put(LAST_ACTIVITY_AT_KEY, now);
     await this.ctx.storage.setAlarm(now + INACTIVITY_TIMEOUT_MS);
+
+    // KV にある Shortcode の TTL をリセットして、Room の有効期限を延長する
+    await touchShortcode(this.env.ROOM_MAPPING_KV, this.snowflakeId);
   }
 
   private async getLastActivityAt(): Promise<number | null> {
