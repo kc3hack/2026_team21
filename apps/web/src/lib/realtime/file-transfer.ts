@@ -33,9 +33,7 @@ export async function sendFile(
   onProgress?: (progress: FileSendProgress) => void,
 ): Promise<void> {
   if (channel.readyState !== "open") {
-    throw new Error(
-      `Cannot send file: DataChannel is "${channel.readyState}", expected "open"`,
-    );
+    throw new Error(`Cannot send file: DataChannel is "${channel.readyState}", expected "open"`);
   }
 
   // メタデータを前もって送信しておく
