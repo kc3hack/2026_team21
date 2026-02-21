@@ -66,6 +66,7 @@ describe("SignalingClient", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
