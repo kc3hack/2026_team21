@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import type { WorkerEnv } from "@/app";
+import { HomePage } from "@/components/pages";
 import { DebugPage } from "@/pages/debug";
 import { Layout } from "@/pages/layout";
 import { RoomPage } from "@/pages/r";
 import { renderer } from "@/pages/renderer";
-import { HomeClient } from "./HomeClient";
 
 const app = new Hono<WorkerEnv>();
 
@@ -20,7 +20,7 @@ app.get("/ws/:roomId", (c) => {
 app.get("/", (c) => {
   return c.render(
     <Layout>
-      <HomeClient />
+      <HomePage />
     </Layout>,
   );
 });
