@@ -44,7 +44,6 @@
     },
     "domains": {
       "react": "recommended",
-      "next": "recommended",
       "test": "recommended"
     }
   },
@@ -96,7 +95,6 @@
           }
         },
         "domains": {
-          "next": "none",
           "react": "recommended",
           "test": "recommended"
         }
