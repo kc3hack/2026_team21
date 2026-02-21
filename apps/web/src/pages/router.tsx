@@ -1,5 +1,5 @@
 import { CounterPage } from "@/components/pages/counter/index.page";
-import { registerComponent } from "@/lib/client/loader";
+import { registerComponent } from "@/lib/client/registry";
 import { escapeJsonForHtml } from "@/lib/escape";
 import { TopPage } from "@/pages/index.page";
 import { RoomPage } from "@/pages/r";
@@ -56,9 +56,7 @@ Object.entries(components).forEach(([id, Component]) => {
  *
  * export const CounterPageRoute = app;
  */
-export const Page = <T extends ComponentId>(
-  args: { id: T } & (ComponentProps<T> extends undefined ? object : ComponentProps<T>),
-) => {
+export const Page = <T extends ComponentId>(args: { id: T } & ComponentProps<T>) => {
   const { id, ...props } = args;
   const hasProps = Object.keys(props).length > 0;
 
