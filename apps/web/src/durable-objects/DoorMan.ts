@@ -10,13 +10,16 @@ type PendingSignals = {
 
 const MAX_PEERS = 2;
 const PENDING_SIGNALS_KEY = "pending-signals";
+const LAST_ACTIVITY_AT_KEY = "last-activity-at";
 const MAX_CANDIDATES = 128;
+const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000;
 
 export class DoorMan extends DurableObject<WorkerEnv["Env"]> {
   async fetch(request: Request): Promise<Response> {
     if (!isWebSocketUpgrade(request)) {
       return new Response("Expected Upgrade: websocket", { status: 426 });
     }
+    await this.touchActivity();
 
     const pair = new WebSocketPair();
     const client = pair[0];
@@ -41,6 +44,7 @@ export class DoorMan extends DurableObject<WorkerEnv["Env"]> {
   }
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    await this.touchActivity();
     const parsed = parseClientMessage(message);
     if (!parsed) {
       return;
@@ -57,6 +61,7 @@ export class DoorMan extends DurableObject<WorkerEnv["Env"]> {
   }
 
   async webSocketClose(ws: WebSocket): Promise<void> {
+    await this.touchActivity();
     const peers = this.ctx.getWebSockets().filter((socket) => socket !== ws);
     for (const peer of peers) {
       this.send(peer, { type: "peer-left" });
@@ -64,9 +69,28 @@ export class DoorMan extends DurableObject<WorkerEnv["Env"]> {
     await this.resetPendingSignals();
   }
 
-  webSocketError(ws: WebSocket, error: unknown): void {
+  async webSocketError(ws: WebSocket, error: unknown): Promise<void> {
+    await this.touchActivity();
     console.error("WebSocket error in DoorMan:", error);
     ws.close(1011, "WebSocket error");
+  }
+
+  async alarm(): Promise<void> {
+    const lastActivityAt = await this.getLastActivityAt();
+    if (lastActivityAt !== null) {
+      const elapsed = Date.now() - lastActivityAt;
+      if (elapsed < INACTIVITY_TIMEOUT_MS) {
+        await this.ctx.storage.setAlarm(lastActivityAt + INACTIVITY_TIMEOUT_MS);
+        return;
+      }
+    }
+
+    for (const ws of this.ctx.getWebSockets()) {
+      ws.close(1001, "Room expired due to inactivity");
+    }
+
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
   }
 
   private async flushPendingSignals(target: WebSocket): Promise<void> {
@@ -119,6 +143,20 @@ export class DoorMan extends DurableObject<WorkerEnv["Env"]> {
       answer: null,
       candidates: [],
     } satisfies PendingSignals);
+  }
+
+  private async touchActivity(): Promise<void> {
+    const now = Date.now();
+    await this.ctx.storage.put(LAST_ACTIVITY_AT_KEY, now);
+    await this.ctx.storage.setAlarm(now + INACTIVITY_TIMEOUT_MS);
+  }
+
+  private async getLastActivityAt(): Promise<number | null> {
+    const value = await this.ctx.storage.get<number>(LAST_ACTIVITY_AT_KEY);
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return null;
+    }
+    return value;
   }
 
   private send(socket: WebSocket, message: ServerMessage): void {
