@@ -235,28 +235,37 @@ body {
   animation: pop-notice 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-
 .qr-container {
   position: absolute;
-  bottom: -100%;
+  bottom: 0;
   left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 400px;
-  background: white;
-  padding: 2rem;
-  border-radius: 2rem 2rem 0 0;
-  box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+  z-index: 50;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  z-index: 50;
-  transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+  max-width: 500px;
+  /* 画面のほぼ全域を覆い隠す高さ */
+  height: 90vh;
+  padding: 4rem 2rem 2rem 2rem;
+  background: white;
+  
+  /* 上だけ丸く、下は画面外まで突き抜ける直角 */
+  border: 8px solid #FF9800;
+  border-bottom: none;
+  border-radius: 3rem 3rem 0 0;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+  
+  /* 初期状態：画面の下に隠しておく */
+  transform: translate(-50%, 100%);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .qr-container.is-visible {
-  bottom: 0;
+  /* 表示状態：画面内にスライドイン */
+  transform: translate(-50%, 0%);
 }
 
 .qr-text {
@@ -297,7 +306,7 @@ body {
   transition: transform 0.8s ease-in-out;
 }
 .ghost-area.is-moved-left {
-  transform: translateX(-15vw);
+  transform: translateX(-25vw);
 }
 
 .ghost-tilter {
@@ -313,14 +322,15 @@ body {
 }
 
 .is-arms-back {
-  transform: rotate(-40deg) translate(-1rem, 1rem) !important;
+  transform: rotate(-30deg) translate(-1rem, 1rem) !important;
   transition: transform 0.4s ease;
 }
 
-.is-presenting-left {
-  transform-origin: center left;
-  transform: rotate(-45deg) translate(0.5rem, -1.5rem) !important;
-  transition: transform 0.5s ease-out;
+#ghost-arm-left.is-presenting-left {
+  /* 左腕の肩の関節位置を軸にする */
+  transform-origin: 60% 54%;
+  transform: rotate(-75deg) !important;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .is-looking-right {
@@ -328,28 +338,27 @@ body {
   transition: transform 0.4s ease;
 }
 
-.qr-container {
+.upload-form-area {
   position: absolute;
-  bottom: -100%;
-  left: 50%;
-  z-index: 50;
+  right: 15vw;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  opacity: 0;
+  width: 90%;
+  max-width: 380px;
+  background: white;
+  padding: 2.5rem 2rem;
+  border-radius: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  border: 4px dashed #758E6F;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
-  width: 90%;
-  max-width: 450px;
-  height: 80vh; 
-  padding: 3rem 2rem;
-  background: white;
-  border: 8px solid #FF9800;
-  border-bottom: none;
-  border-radius: 3rem 3rem 0 0;
-  box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
-  transform: translateX(-50%);
-  transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  gap: 1.5rem;
+  z-index: 40;
 }
 
+/* 既存のコード */
 .upload-form-area.is-visible {
   animation: pop-bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
