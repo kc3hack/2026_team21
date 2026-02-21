@@ -25,7 +25,7 @@ app.get("/", (c) => {
   );
 });
 
-app.route("/room", RoomPage);
+app.route("/r", RoomPage);
 app.route("/debug", DebugPage);
 
 export default app;

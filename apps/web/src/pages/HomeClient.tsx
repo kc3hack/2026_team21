@@ -34,15 +34,6 @@ export const HomeClient = () => {
         </button>
       </div>
 
-      {/* QRコード表示エリア */}
-      <div id="qr-container" class="qr-container">
-        <p class="qr-text">相手にQRを読み取らせてください</p>
-        <div class="qr-image-canvas" id="qr-image-canvas"></div>
-        <a href="/room/test1234" class="mock-qr-btn">
-          【テスト】QRを読んだことにして進む
-        </a>
-      </div>
-
       {/* Viteの機能を使ってTSファイルを直接ブラウザで読み込む */}
       <script type="module" src="/src/pages/home.client.ts"></script>
     </main>

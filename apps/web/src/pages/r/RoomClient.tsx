@@ -14,6 +14,12 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
             <img src="/images/home/body.svg" alt="body" class="ghost-part" />
             <img src="/images/home/head.svg" alt="head" class="ghost-part" />
 
+            <div class="zzz-container" id="zzz-effect">
+              <span class="zzz-text z1">z</span>
+              <span class="zzz-text z2">z</span>
+              <span class="zzz-text z3">z</span>
+            </div>
+
             {/* 腕パーツ */}
             <img id="ghost-arm-right" src="/images/home/right.svg" alt="right" class="ghost-part" />
             <img id="ghost-arm-left" src="/images/home/left.svg" alt="left" class="ghost-part" />
@@ -22,8 +28,8 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
             <div class="cheek cheek-right" />
 
             {/* 目パーツ */}
-            <img id="ghost-eye-right" src="/images/room/right.svg" alt="right_eye" class="ghost-part ghost-eye" />
-            <img id="ghost-eye-left" src="/images/room/left.svg" alt="left_eye" class="ghost-part ghost-eye" />
+            <img id="ghost-eye-right" src="/images/room/right_sleep.svg" alt="right_eye" class="ghost-part ghost-eye" />
+            <img id="ghost-eye-left" src="/images/room/left_sleep.svg" alt="left_eye" class="ghost-part ghost-eye" />
           </div>
           <div class="ghost-shadow" />
         </div>
@@ -53,7 +59,15 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
         </form>
       </div>
 
-      {/* ▼ Viteの機能を使ってTSファイルを直接ブラウザで読み込む ▼ */}
+      <div id="qr-container" class="qr-container">
+        <p class="qr-text">QRコードを読み取ってもらいましょう</p>
+        <div class="qr-image-canvas" id="qr-image-canvas"></div>
+        <button type="button" class="mock-qr-btn" id="mock-match-btn">
+          【テスト】QRを読んだことにして進む
+        </button>
+      </div>
+
+      {/* Viteの機能を使ってTSファイルを直接ブラウザで読み込む */}
       <script type="module" src="/src/pages/r/room.client.ts"></script>
     </main>
   );
