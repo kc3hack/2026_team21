@@ -127,6 +127,10 @@ export class PeerConnectionManager {
 
   private async handleAnswer(sdp: string): Promise<void> {
     if (!this.pc) return;
+    if (this.pc.signalingState !== "have-local-offer") {
+      // 既に stable の場合など、古い answer が遅延到着したケースは無視する
+      return;
+    }
     await this.pc.setRemoteDescription({ type: "answer", sdp });
   }
 

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { Script } from "vite-ssr-components/hono";
 import { Layout } from "@/pages/layout";
 
 const app = new Hono();
@@ -165,7 +166,7 @@ app.get("/realtime", (c) => {
         }
       `}</style>
 
-      <script type="module" src="/src/pages/debug/debug.client.ts"></script>
+      <Script type="module" src="/src/pages/debug/debug.client.ts"></Script>
     </Layout>,
   );
 });

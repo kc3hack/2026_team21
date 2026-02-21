@@ -289,8 +289,24 @@ const init = (): void => {
 
   setWsStatus("disconnected");
   resetPeerState();
+  appendLog(elements.logOutput, "client-ready");
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  init();
-});
+const boot = (): void => {
+  try {
+    init();
+    (window as Window & { __realtimeDebugLoaded?: boolean }).__realtimeDebugLoaded = true;
+  } catch (error) {
+    console.error("Failed to initialize realtime debug client:", error);
+    const output = document.getElementById("log-output");
+    if (output) {
+      appendLog(output, "client-init-error", String(error));
+    }
+  }
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot, { once: true });
+} else {
+  boot();
+}
