@@ -33,7 +33,7 @@ linkWorkspacePackages: true
 
 minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
-  - hono  
+  - hono
 preferWorkspacePackages: true
 
 saveWorkspaceProtocol: false

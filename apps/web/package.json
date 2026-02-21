@@ -10,6 +10,7 @@
     "test": "vitest --run"
   },
   "dependencies": {
+    "@cloudflare/realtimekit": "catalog:",
     "hono": "^4.11.10"
   },
   "devDependencies": {
