@@ -47,6 +47,11 @@ export class PeerConnectionManager {
       this.cleanup();
       this.emit("disconnected");
     });
+
+    this.signaling.on("disconnected", () => {
+      this.cleanup();
+      this.emit("disconnected");
+    });
   }
 
   /** ピアが参加した時にオファーを作成する（最初に接続した側が呼ぶ） */
@@ -65,9 +70,13 @@ export class PeerConnectionManager {
       const offer = await this.pc.createOffer();
       await this.pc.setLocalDescription(offer);
       const sdp = this.pc.localDescription?.sdp;
-      if (sdp) {
-        this.signaling.send({ type: "offer", sdp });
+      if (!sdp) {
+        throw new Error("Failed to create local offer SDP");
       }
+      this.signaling.send({ type: "offer", sdp });
+    } catch (error) {
+      this.cleanup();
+      throw error;
     } finally {
       this.makingOffer = false;
     }
@@ -79,12 +88,18 @@ export class PeerConnectionManager {
       this.cleanup();
     }
     this.pc = this.createPeerConnection();
-    await this.pc.setRemoteDescription({ type: "offer", sdp });
-    const answer = await this.pc.createAnswer();
-    await this.pc.setLocalDescription(answer);
-    const answerSdp = this.pc.localDescription?.sdp;
-    if (answerSdp) {
+    try {
+      await this.pc.setRemoteDescription({ type: "offer", sdp });
+      const answer = await this.pc.createAnswer();
+      await this.pc.setLocalDescription(answer);
+      const answerSdp = this.pc.localDescription?.sdp;
+      if (!answerSdp) {
+        throw new Error("Failed to create local answer SDP");
+      }
       this.signaling.send({ type: "answer", sdp: answerSdp });
+    } catch (error) {
+      this.cleanup();
+      throw error;
     }
   }
 
@@ -124,6 +139,7 @@ export class PeerConnectionManager {
 
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
+        this.cleanup();
         this.emit("disconnected");
       }
     };
