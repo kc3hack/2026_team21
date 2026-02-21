@@ -6,8 +6,10 @@ import { TransferCompletePopup } from "@/components/animations/TransferCompleteP
 import { PinInputBlock } from "@/components/button/PinInputBlock";
 import { SendBackButton } from "@/components/button/SendBackButton";
 import { LogoIcon } from "@/components/Logo";
-import { type ReceiverEntryMethod, useWebRTCConnection } from "@/hooks/useWebRTCConnection";
-import { useWebRTCConnection } from "@/hooks/useWebRTCConnection";
+import {
+  type ReceiverEntryMethod,
+  useWebRTCConnection,
+} from "@/hooks/useWebRTCConnection";
 import { apiClient } from "@/pages/api/index.client";
 import { Page } from "@/pages/router";
 
@@ -244,7 +246,8 @@ type Props = { roomId: string };
 
 export const RoomPage = ({ roomId }: Props) => {
   const entryMethod = resolveEntryMethodFromQuery();
-  const { receiveProgress, lastReceivedFile, errorMessage } = useWebRTCConnection(roomId, entryMethod);
+  const { receiveProgress, lastReceivedFile, errorMessage } =
+    useWebRTCConnection(roomId, entryMethod);
   const [isCompleteOpen, setIsCompleteOpen] = useState(false);
 
   useEffect(() => {
@@ -253,7 +256,9 @@ export const RoomPage = ({ roomId }: Props) => {
     }
   }, [lastReceivedFile]);
 
-  const receivePercent = lastReceivedFile ? 100 : parseProgressPercent(receiveProgress);
+  const receivePercent = lastReceivedFile
+    ? 100
+    : parseProgressPercent(receiveProgress);
 
   const handleCompleteOk = () => {
     window.location.href = "/";
@@ -270,7 +275,9 @@ export const RoomPage = ({ roomId }: Props) => {
       <div class={centerSectionClass}>
         <div class={waitCardClass}>
           <h1 class="wait-title">ファイルを受け取っています</h1>
-          <p class="wait-body">送信側からの転送完了まで、このままお待ちください。</p>
+          <p class="wait-body">
+            送信側からの転送完了まで、このままお待ちください。
+          </p>
 
           <div class={waitDotsClass}>
             <span class="dot dot-1" />
@@ -308,7 +315,9 @@ export const ReceivePage = () => {
   const [pinError, setPinError] = useState("");
 
   const findRoomIdByShortCode = async (shortcode: string) => {
-    const validate = await apiClient.rooms[":shortcode"].$get({ param: { shortcode } });
+    const validate = await apiClient.rooms[":shortcode"].$get({
+      param: { shortcode },
+    });
     if (validate.ok) {
       const { id } = await validate.json();
       return id;
@@ -333,12 +342,14 @@ export const ReceivePage = () => {
     setPinError("");
 
     try {
-              const roomId = await findRoomIdByShortCode(shortcode);
-              window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}`;
-            } catch (error) {
-              console.error(error);
-              setPinError("6桁の番号が見つかりませんでした。番号を再確認してください。");
-            }finally {
+      const roomId = await findRoomIdByShortCode(pin);
+      window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}`;
+    } catch (error) {
+      console.error(error);
+      setPinError(
+        "6桁の番号が見つかりませんでした。番号を再確認してください。",
+      );
+    } finally {
       setIsResolvingPin(false);
     }
   };

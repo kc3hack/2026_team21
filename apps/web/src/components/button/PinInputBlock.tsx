@@ -115,7 +115,7 @@ type Props = {
 
 export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "", helperMessage = "" }: Props) => {
   const [digits, setDigits] = useState<string[]>(Array.from({ length: PIN_INPUT_KEYS.length }, () => ""));
-  const inputRefs = useRef<Array<HTMLInputElement | null> | null>([]);
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const pin = digits.join("");
   const canSubmit = pin.length === PIN_INPUT_KEYS.length && !isSubmitting;
@@ -130,40 +130,34 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     setDigits(next);
   };
 
-  const handleInput = (index: number, e: InputEvent) => {
-type PinInputBlockProps = {
-  onSubmit: (shortCode: string) => Promise<void> | void;
-};
+  const submitIfPossible = (): void => {
+    if (!canSubmit) {
+      return;
+    }
+    void Promise.resolve(onSubmit(pin));
+  };
 
-export const PinInputBlock = (props: PinInputBlockProps) => {
-  // 入力フォーカス移動のロジックを簡易的に実装
-  const handleInput = (e: InputEvent) => {
+  const handleInput = (index: number, e: InputEvent): void => {
     const target = e.currentTarget;
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
 
     const raw = target.value.replace(/\D/g, "");
-    if (raw.length === 0) {
+    if (!raw) {
       updateDigit(index, "");
       return;
     }
 
-    const value = raw.at(-1) ?? "";
+    const value = raw.slice(-1);
     updateDigit(index, value);
 
     if (index < PIN_INPUT_KEYS.length - 1) {
       focusInput(index + 1);
-    target.value = target.value.replace(/\D/g, "").slice(0, 1);
-
-    const val = target.value;
-    const nextInput = target.nextElementSibling;
-    if (val && nextInput instanceof HTMLInputElement) {
-      nextInput.focus();
     }
   };
 
-  const handleKeyDown = (index: number, e: KeyboardEvent) => {
+  const handleKeyDown = (index: number, e: KeyboardEvent): void => {
     const target = e.currentTarget;
     if (!(target instanceof HTMLInputElement)) {
       return;
@@ -174,12 +168,12 @@ export const PinInputBlock = (props: PinInputBlockProps) => {
       return;
     }
 
-    if (e.key === "Enter" && canSubmit) {
-      void Promise.resolve(onSubmit(pin));
+    if (e.key === "Enter") {
+      submitIfPossible();
     }
   };
 
-  const handlePaste = (e: ClipboardEvent) => {
+  const handlePaste = (e: ClipboardEvent): void => {
     e.preventDefault();
     const pasted = e.clipboardData?.getData("text") ?? "";
     const onlyDigits = pasted.replace(/\D/g, "").slice(0, PIN_INPUT_KEYS.length);
@@ -189,35 +183,20 @@ export const PinInputBlock = (props: PinInputBlockProps) => {
 
     const next = Array.from({ length: PIN_INPUT_KEYS.length }, (_, index) => onlyDigits[index] ?? "");
     setDigits(next);
+
     const focusIndex = Math.max(0, Math.min(onlyDigits.length - 1, PIN_INPUT_KEYS.length - 1));
     focusInput(focusIndex);
   };
 
-  const handleSubmit = () => {
-    if (!canSubmit) {
-      return;
-    }
-    void Promise.resolve(onSubmit(pin));
-  };
-
-  const handleSubmit = async (e: Event) => {
+  const handleSubmit = (e: Event): void => {
     e.preventDefault();
-    const form = e.currentTarget;
-    if (!(form instanceof HTMLFormElement)) {
-      return;
-    }
-
-    const shortCode = PIN_INPUT_KEYS.map((key) => {
-      const input = form.elements.namedItem(key);
-      return input instanceof HTMLInputElement ? input.value : "";
-    }).join("");
-
-    await props.onSubmit(shortCode);
+    submitIfPossible();
   };
 
   return (
     <form action="" class={containerStyles} onSubmit={handleSubmit}>
       <p class={titleStyles}>6桁の番号を入力</p>
+
       <div class={pinContainerStyles}>
         {PIN_INPUT_KEYS.map((key, index) => (
           <input
@@ -241,13 +220,12 @@ export const PinInputBlock = (props: PinInputBlockProps) => {
         ))}
       </div>
 
-      <button type="button" class={submitButtonStyles} onClick={handleSubmit} disabled={!canSubmit}>
+      <button type="submit" class={submitButtonStyles} disabled={!canSubmit}>
         {isSubmitting ? "確認中..." : "受信する"}
       </button>
 
       {helperMessage && <p class={helperTextStyles}>{helperMessage}</p>}
-
       {errorMessage && <p class={errorStyles}>{errorMessage}</p>}
-    </div>
+    </form>
   );
 };
