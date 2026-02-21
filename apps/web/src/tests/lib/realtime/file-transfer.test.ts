@@ -120,7 +120,7 @@ describe("sendFile", () => {
 
 /* ── FileReceiver テスト ── */
 describe("FileReceiver", () => {
-  it("file-meta → バイナリチャンク → file-end の順で受信するとファイルが組み立てられる", () => {
+  it("file-meta → バイナリチャンク → file-end の順で受信するとファイルが組み立てられる", async () => {
     const receiver = new FileReceiver();
     const onFile = vi.fn();
     receiver.onFile(onFile);
@@ -132,15 +132,15 @@ describe("FileReceiver", () => {
       size: 11,
       mimeType: "text/plain",
     };
-    receiver.handleMessage(JSON.stringify(meta));
+    await receiver.handleMessage(JSON.stringify(meta));
 
     // chunks
     const encoder = new TextEncoder();
     const chunk = encoder.encode("hello world").buffer;
-    receiver.handleMessage(chunk as ArrayBuffer);
+    await receiver.handleMessage(chunk as ArrayBuffer);
 
     // end
-    receiver.handleMessage(JSON.stringify({ type: "file-end" }));
+    await receiver.handleMessage(JSON.stringify({ type: "file-end" }));
 
     expect(onFile).toHaveBeenCalledOnce();
     const result = onFile.mock.calls[0][0];
@@ -150,7 +150,7 @@ describe("FileReceiver", () => {
     expect(result.data).toBeInstanceOf(Blob);
   });
 
-  it("受信進捗コールバックが呼ばれる", () => {
+  it("受信進捗コールバックが呼ばれる", async () => {
     const receiver = new FileReceiver();
     const onProgress = vi.fn();
     receiver.onProgress(onProgress);
@@ -161,38 +161,38 @@ describe("FileReceiver", () => {
       size: 200,
       mimeType: "application/octet-stream",
     };
-    receiver.handleMessage(JSON.stringify(meta));
+    await receiver.handleMessage(JSON.stringify(meta));
 
     const chunk1 = new ArrayBuffer(100);
-    receiver.handleMessage(chunk1);
+    await receiver.handleMessage(chunk1);
     expect(onProgress).toHaveBeenCalledWith({ received: 100, total: 200 });
 
     const chunk2 = new ArrayBuffer(100);
-    receiver.handleMessage(chunk2);
+    await receiver.handleMessage(chunk2);
     expect(onProgress).toHaveBeenCalledWith({ received: 200, total: 200 });
   });
 
-  it("file-meta を受信する前のバイナリデータは無視される", () => {
+  it("file-meta を受信する前のバイナリデータは無視される", async () => {
     const receiver = new FileReceiver();
     const onFile = vi.fn();
     receiver.onFile(onFile);
 
     // meta なしで chunk を送る
-    receiver.handleMessage(new ArrayBuffer(10));
+    await receiver.handleMessage(new ArrayBuffer(10));
 
     // file-end しても何も起きない
-    receiver.handleMessage(JSON.stringify({ type: "file-end" }));
+    await receiver.handleMessage(JSON.stringify({ type: "file-end" }));
 
     expect(onFile).not.toHaveBeenCalled();
   });
 
-  it("file-end 後に新しいファイルを受信できる", () => {
+  it("file-end 後に新しいファイルを受信できる", async () => {
     const receiver = new FileReceiver();
     const onFile = vi.fn();
     receiver.onFile(onFile);
 
     // 1つ目のファイル
-    receiver.handleMessage(
+    await receiver.handleMessage(
       JSON.stringify({
         type: "file-meta",
         name: "first.bin",
@@ -200,11 +200,11 @@ describe("FileReceiver", () => {
         mimeType: "application/octet-stream",
       }),
     );
-    receiver.handleMessage(new ArrayBuffer(5));
-    receiver.handleMessage(JSON.stringify({ type: "file-end" }));
+    await receiver.handleMessage(new ArrayBuffer(5));
+    await receiver.handleMessage(JSON.stringify({ type: "file-end" }));
 
     // 2つ目のファイル
-    receiver.handleMessage(
+    await receiver.handleMessage(
       JSON.stringify({
         type: "file-meta",
         name: "second.bin",
@@ -212,20 +212,20 @@ describe("FileReceiver", () => {
         mimeType: "application/octet-stream",
       }),
     );
-    receiver.handleMessage(new ArrayBuffer(3));
-    receiver.handleMessage(JSON.stringify({ type: "file-end" }));
+    await receiver.handleMessage(new ArrayBuffer(3));
+    await receiver.handleMessage(JSON.stringify({ type: "file-end" }));
 
     expect(onFile).toHaveBeenCalledTimes(2);
     expect(onFile.mock.calls[0][0].name).toBe("first.bin");
     expect(onFile.mock.calls[1][0].name).toBe("second.bin");
   });
 
-  it("複数チャンクを正しく結合する", () => {
+  it("複数チャンクを正しく結合する", async () => {
     const receiver = new FileReceiver();
     const onFile = vi.fn();
     receiver.onFile(onFile);
 
-    receiver.handleMessage(
+    await receiver.handleMessage(
       JSON.stringify({
         type: "file-meta",
         name: "multi.bin",
@@ -234,13 +234,81 @@ describe("FileReceiver", () => {
       }),
     );
 
-    receiver.handleMessage(new ArrayBuffer(10));
-    receiver.handleMessage(new ArrayBuffer(10));
-    receiver.handleMessage(new ArrayBuffer(10));
-    receiver.handleMessage(JSON.stringify({ type: "file-end" }));
+    await receiver.handleMessage(new ArrayBuffer(10));
+    await receiver.handleMessage(new ArrayBuffer(10));
+    await receiver.handleMessage(new ArrayBuffer(10));
+    await receiver.handleMessage(JSON.stringify({ type: "file-end" }));
 
     expect(onFile).toHaveBeenCalledOnce();
     const result = onFile.mock.calls[0][0];
     expect(result.data.size).toBe(30);
+  });
+
+  /* ── Blob / ArrayBufferView 対応テスト ── */
+
+  it("Blob をバイナリチャンクとして受信できる", async () => {
+    const receiver = new FileReceiver();
+    const onFile = vi.fn();
+    receiver.onFile(onFile);
+
+    await receiver.handleMessage(
+      JSON.stringify({ type: "file-meta", name: "blob.bin", size: 6, mimeType: "application/octet-stream" }),
+    );
+    const blob = new Blob([new Uint8Array([1, 2, 3, 4, 5, 6])]);
+    await receiver.handleMessage(blob);
+    await receiver.handleMessage(JSON.stringify({ type: "file-end" }));
+
+    expect(onFile).toHaveBeenCalledOnce();
+    expect(onFile.mock.calls[0][0].data.size).toBe(6);
+  });
+
+  it("Uint8Array (ArrayBufferView) をバイナリチャンクとして受信できる", async () => {
+    const receiver = new FileReceiver();
+    const onFile = vi.fn();
+    receiver.onFile(onFile);
+
+    await receiver.handleMessage(
+      JSON.stringify({ type: "file-meta", name: "view.bin", size: 4, mimeType: "application/octet-stream" }),
+    );
+    const view = new Uint8Array([10, 20, 30, 40]);
+    await receiver.handleMessage(view);
+    await receiver.handleMessage(JSON.stringify({ type: "file-end" }));
+
+    expect(onFile).toHaveBeenCalledOnce();
+    expect(onFile.mock.calls[0][0].data.size).toBe(4);
+  });
+
+  it("ArrayBufferView のサブレンジ（byteOffset 付き）でも正しく処理される", async () => {
+    const receiver = new FileReceiver();
+    const onProgress = vi.fn();
+    receiver.onProgress(onProgress);
+
+    await receiver.handleMessage(
+      JSON.stringify({ type: "file-meta", name: "sub.bin", size: 3, mimeType: "application/octet-stream" }),
+    );
+
+    // 大きなバッファの途中だけを参照する TypedArray
+    const base = new Uint8Array([0, 0, 10, 20, 30, 0, 0]);
+    const sub = base.subarray(2, 5); // byteOffset=2, byteLength=3
+    await receiver.handleMessage(sub);
+
+    expect(onProgress).toHaveBeenCalledWith({ received: 3, total: 3 });
+  });
+
+  it("不正な JSON 文字列を受信すると onError が呼ばれる", async () => {
+    const receiver = new FileReceiver();
+    const onError = vi.fn();
+    receiver.onError(onError);
+
+    await receiver.handleMessage("this is not json{{{");
+
+    expect(onError).toHaveBeenCalledOnce();
+    expect(onError.mock.calls[0][0]).toBeInstanceOf(SyntaxError);
+  });
+
+  it("onError が未設定でも不正データで例外が外に漏れない", async () => {
+    const receiver = new FileReceiver();
+    // onError 未登録 ─ Promise が reject しないことを確認
+    await expect(receiver.handleMessage("bad json")).resolves.toBeUndefined();
   });
 });

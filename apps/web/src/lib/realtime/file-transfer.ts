@@ -72,6 +72,28 @@ function waitForBufferDrain(channel: RTCDataChannel): Promise<void> {
   });
 }
 
+/**
+ * Blob / ArrayBufferView / ArrayBuffer を一律 ArrayBuffer に変換する。
+ * ブラウザによって DataChannel の binaryType 設定や
+ * MessageEvent.data の型が異なるケースを吸収する。
+ */
+async function toArrayBuffer(data: ArrayBuffer | Blob | ArrayBufferView): Promise<ArrayBuffer> {
+  if (data instanceof ArrayBuffer) {
+    return data;
+  }
+  if (data instanceof Blob) {
+    return await data.arrayBuffer();
+  }
+  if (ArrayBuffer.isView(data)) {
+    // TypedArray / DataView ─ 基底バッファの一部だけを参照している場合があるのでコピー
+    // .buffer は SharedArrayBuffer の可能性があるため、新しい ArrayBuffer へコピーする
+    const copy = new ArrayBuffer(data.byteLength);
+    new Uint8Array(copy).set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+    return copy;
+  }
+  throw new TypeError(`Unexpected binary data type: ${typeof data}`);
+}
+
 /* DataChannelからのファイル受信を管理するクラス */
 export class FileReceiver {
   private currentFile: {
@@ -84,6 +106,7 @@ export class FileReceiver {
 
   private onFileCallback?: (result: FileReceiveResult) => void;
   private onProgressCallback?: (progress: { received: number; total: number }) => void;
+  private onErrorCallback?: (error: Error) => void;
 
   /** ファイル受信完了時のコールバック */
   onFile(callback: (result: FileReceiveResult) => void): void {
@@ -95,44 +118,63 @@ export class FileReceiver {
     this.onProgressCallback = callback;
   }
 
+  /** エラー発生時のコールバック */
+  onError(callback: (error: Error) => void): void {
+    this.onErrorCallback = callback;
+  }
+
   /** DataChannelの onmessage から呼ばれるハンドラー */
-  handleMessage(data: string | ArrayBuffer): void {
-    if (typeof data === "string") {
-      const msg: FileTransferMessage = JSON.parse(data);
-      switch (msg.type) {
-        case "file-meta":
-          this.currentFile = {
-            name: msg.name,
-            size: msg.size,
-            mimeType: msg.mimeType,
-            chunks: [],
-            received: 0,
-          };
-          break;
-        case "file-end":
-          if (this.currentFile) {
-            const blob = new Blob(this.currentFile.chunks, {
-              type: this.currentFile.mimeType,
-            });
-            this.onFileCallback?.({
-              name: this.currentFile.name,
-              size: this.currentFile.size,
-              mimeType: this.currentFile.mimeType,
-              data: blob,
-            });
-            this.currentFile = null;
-          }
-          break;
+  async handleMessage(data: string | ArrayBuffer | Blob | ArrayBufferView): Promise<void> {
+    try {
+      if (typeof data === "string") {
+        this.handleStringMessage(data);
+      } else {
+        const buffer = await toArrayBuffer(data);
+        this.handleBinaryMessage(buffer);
       }
-    } else if (data instanceof ArrayBuffer) {
-      if (this.currentFile) {
-        this.currentFile.chunks.push(data);
-        this.currentFile.received += data.byteLength;
-        this.onProgressCallback?.({
-          received: this.currentFile.received,
-          total: this.currentFile.size,
-        });
-      }
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      this.onErrorCallback?.(error);
+    }
+  }
+
+  private handleStringMessage(data: string): void {
+    const msg: FileTransferMessage = JSON.parse(data);
+    switch (msg.type) {
+      case "file-meta":
+        this.currentFile = {
+          name: msg.name,
+          size: msg.size,
+          mimeType: msg.mimeType,
+          chunks: [],
+          received: 0,
+        };
+        break;
+      case "file-end":
+        if (this.currentFile) {
+          const blob = new Blob(this.currentFile.chunks, {
+            type: this.currentFile.mimeType,
+          });
+          this.onFileCallback?.({
+            name: this.currentFile.name,
+            size: this.currentFile.size,
+            mimeType: this.currentFile.mimeType,
+            data: blob,
+          });
+          this.currentFile = null;
+        }
+        break;
+    }
+  }
+
+  private handleBinaryMessage(buffer: ArrayBuffer): void {
+    if (this.currentFile) {
+      this.currentFile.chunks.push(buffer);
+      this.currentFile.received += buffer.byteLength;
+      this.onProgressCallback?.({
+        received: this.currentFile.received,
+        total: this.currentFile.size,
+      });
     }
   }
 }
