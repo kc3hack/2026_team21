@@ -1,13 +1,28 @@
 import { Hono } from "hono";
-import { RoomClient } from "./RoomClient";
+import { Page } from "@/pages/router";
 
-const app = new Hono();
+export const RoomPageRoute = () => {
+  const app = new Hono();
 
-app.get("/:roomId", (c) => {
-  const currentPath = c.req.path;
-  const roomId = c.req.param("roomId");
+  app.get("/:roomId", (c) => {
+    const roomId = c.req.param("roomId");
 
-  return c.render(<RoomClient currentPath={currentPath} roomId={roomId} />);
-});
+    return c.render(<Page id={"/room/:roomId"} roomId={roomId} />);
+  });
 
-export const RoomPage = app;
+  return app;
+};
+
+type Props = {
+  roomId: string;
+};
+
+export const RoomPage = (props: Props) => {
+  return (
+    <div>
+      <h1>Room Page</h1>
+      <p>ここにファイル送信のUIが入る予定</p>
+      <p>Room ID: {props.roomId}</p>
+    </div>
+  );
+};

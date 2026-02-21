@@ -1,19 +1,18 @@
-import type { FC } from "hono/jsx";
 import { render } from "hono/jsx/dom";
-import type { ComponentId } from "@/pages/router";
+import type { Component, ComponentId } from "@/pages/router";
 
 /**
  * Client Componentのレジストリ
  * ここにClient Componentを登録しておくと、自動的にマウントされます
  */
-const componentRegistry: Record<string, FC> = {};
+const componentRegistry: { [K in ComponentId]?: Component<K> } = {};
 
 /**
  * Client Componentを登録する関数
  * @param id Client ComponentのID
  * @param component Client ComponentのReactコンポーネント
  */
-export function registerComponent(id: ComponentId, component: FC) {
+export function registerComponent<T extends ComponentId>(id: T, component: Component<T>) {
   componentRegistry[id] = component;
 }
 
@@ -24,7 +23,12 @@ export function mountComponents() {
   Object.entries(componentRegistry).forEach(([id, Component]) => {
     const root = document.getElementById(id);
     if (root) {
-      render(<Component />, root);
+      // サーバーから埋め込まれたpropsを取得してパース
+      // この実装は src/pages/router.tsx にあるので合わせて見ること
+      const propsScript = document.getElementById(`${id}-props`);
+      const props = propsScript?.textContent ? JSON.parse(propsScript.textContent) : {};
+
+      render(<Component {...props} />, root);
     }
   });
 }
