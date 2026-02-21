@@ -2,12 +2,12 @@
 import { Hono } from "hono";
 import { css, Style } from "hono/css";
 import { useState } from "hono/jsx";
-import { useWebRTCConnection } from "@/hooks/useWebRTCConnection";
-import { Page } from "@/pages/router";
-import { LogoIcon } from "@/components/Logo";
 import { ArrivingOrangeGhost } from "@/components/animations/ArrivingOrangeGhost";
 import { PinInputBlock } from "@/components/button/PinInputBlock";
 import { SendBackButton } from "@/components/button/SendBackButton";
+import { LogoIcon } from "@/components/Logo";
+import { useWebRTCConnection } from "@/hooks/useWebRTCConnection";
+import { Page } from "@/pages/router";
 
 export const RoomPageRoute = () => {
   const app = new Hono();
@@ -67,7 +67,7 @@ export const RoomPage = (props: Props) => {
 };
 
 // ==========================================
-// 追加：受信トップページ ( /r ) 
+// 追加：受信トップページ ( /r )
 // ==========================================
 export const ReceivePage = () => {
   const [isMoving, setIsMoving] = useState(false); // オレンジお化けの退場状態
@@ -106,15 +106,17 @@ export const ReceivePage = () => {
       {/* 2. 中央：UIエリア */}
       <div style="z-index: 100; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; padding: 0 20px;">
         <h1 style="color: #f6ad49; font-weight: 900; font-size: 2rem; margin-bottom: 2rem;">ファイルを受け取る</h1>
-        
+
         {/* PIN入力ブロック */}
         <PinInputBlock />
 
         {/* 送信へ戻るボタン (オレンジ縁) */}
         <SendBackButton onClick={handleSendClick} />
-        
+
         <p style="color: #5e7359; font-weight: bold; margin-top: 2rem;">
-          送信側で発行された6桁の番号を<br/>入力してください
+          送信側で発行された6桁の番号を
+          <br />
+          入力してください
         </p>
       </div>
 

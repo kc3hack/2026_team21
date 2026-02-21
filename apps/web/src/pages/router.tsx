@@ -2,8 +2,7 @@ import { CounterPage } from "@/components/pages/counter/index.page";
 import { registerComponent } from "@/lib/client/registry";
 import { escapeJsonForHtml } from "@/lib/escape";
 import { TopPage } from "@/pages/index.page";
-import { RoomPage, ReceivePage } from "@/pages/r";
-
+import { ReceivePage, RoomPage } from "@/pages/r";
 
 /**
  * URLパスとClient Componentを紐付けるレジストリ。

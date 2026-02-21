@@ -75,7 +75,7 @@ export const PinInputBlock = () => {
 
   const handleKeyDown = (e: any) => {
     const target = e.target;
-    if (e.key === 'Backspace' && !target.value && target.previousElementSibling) {
+    if (e.key === "Backspace" && !target.value && target.previousElementSibling) {
       target.previousElementSibling.focus();
     }
   };
@@ -96,7 +96,7 @@ export const PinInputBlock = () => {
           />
         ))}
       </div>
-      <button 
+      <button
         type="button"
         style="margin-top: 0.5rem; background: #f6ad49; color: white; border: none; padding: 0.8rem 2rem; border-radius: 2rem; font-weight: 900; cursor: pointer; font-size: 1.1rem;"
       >

@@ -63,7 +63,9 @@ export const SlidingGhost = ({ isMoving }: Props) => {
       <EyeTracker bodyId={bodyId} />
       <InteractionController bodyId={bodyId} />
       <div class="ghost-tilter">
-        <div class="ghost-body" id={bodyId}><GhostParts /></div>
+        <div class="ghost-body" id={bodyId}>
+          <GhostParts />
+        </div>
         <div class="ghost-shadow" />
       </div>
     </div>

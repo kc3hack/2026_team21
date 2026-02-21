@@ -64,10 +64,13 @@ export const FileSelectArea = ({ onSelect }: Props) => {
         <span style="font-size: 2.5rem; margin-bottom: 0.25rem;">📁</span>
         <span>ここにファイルをドロップ</span>
       </div>
-      
+
       <span style="color: #fff; font-weight: bold; font-size: 1.1rem;">または</span>
-      
-      <div onClick={onSelect} style="cursor: pointer; width: 100%; display: flex; justify-content: center; transform: scale(0.8);">
+
+      <div
+        onClick={onSelect}
+        style="cursor: pointer; width: 100%; display: flex; justify-content: center; transform: scale(0.8);"
+      >
         <GreenButton text="ファイルを選択" />
       </div>
     </div>
