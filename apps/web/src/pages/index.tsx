@@ -1,31 +1,17 @@
 import { Hono } from "hono";
-import type { WorkerEnv } from "@/app";
+import { CounterPageRoute } from "@/pages/counter";
 import { DebugPage } from "@/pages/debug";
-import { Layout } from "@/pages/layout";
 import { RoomPage } from "@/pages/r";
 import { renderer } from "@/pages/renderer";
-import { HomeClient } from "./HomeClient";
+import { Page } from "@/pages/router";
 
-const app = new Hono<WorkerEnv>();
+const app = new Hono();
 
 app.use(renderer);
 
-app.get("/ws/:roomId", (c) => {
-  const roomId = c.req.param("roomId");
-  const id = c.env.DOORMAN.idFromName(roomId);
-  const stub = c.env.DOORMAN.get(id);
-  return stub.fetch(c.req.raw);
-});
-
-app.get("/", (c) => {
-  return c.render(
-    <Layout>
-      <HomeClient />
-    </Layout>,
-  );
-});
-
+app.get("/", (c) => c.render(<Page id="/" />));
 app.route("/r", RoomPage);
 app.route("/debug", DebugPage);
+app.route("/counter", CounterPageRoute);
 
 export default app;

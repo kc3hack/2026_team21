@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { Script } from "vite-ssr-components/hono";
-import { Layout } from "@/pages/layout";
 
 const app = new Hono();
 
@@ -10,7 +9,7 @@ app.get("/realtime", (c) => {
   const turnCredential = typeof bindings.CF_TURN_TOKEN === "string" ? bindings.CF_TURN_TOKEN : "";
 
   return c.render(
-    <Layout>
+    <div>
       <section
         id="realtime-debug-page"
         class="realtime-debug-page"
@@ -167,7 +166,7 @@ app.get("/realtime", (c) => {
       `}</style>
 
       <Script type="module" src="/src/pages/debug/debug.client.ts"></Script>
-    </Layout>,
+    </div>,
   );
 });
 
