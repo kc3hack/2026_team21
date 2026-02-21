@@ -7,6 +7,8 @@ import { PinInputBlock } from "@/components/button/PinInputBlock";
 import { SendBackButton } from "@/components/button/SendBackButton";
 import { LogoIcon } from "@/components/Logo";
 import { type ReceiverEntryMethod, useWebRTCConnection } from "@/hooks/useWebRTCConnection";
+import { useWebRTCConnection } from "@/hooks/useWebRTCConnection";
+import { apiClient } from "@/pages/api/index.client";
 import { Page } from "@/pages/router";
 
 const responsiveWrapper = css`
@@ -305,6 +307,16 @@ export const ReceivePage = () => {
   const [isResolvingPin, setIsResolvingPin] = useState(false);
   const [pinError, setPinError] = useState("");
 
+  const findRoomIdByShortCode = async (shortcode: string) => {
+    const validate = await apiClient.rooms[":shortcode"].$get({ param: { shortcode } });
+    if (validate.ok) {
+      const { id } = await validate.json();
+      return id;
+    }
+
+    throw new Error("Invalid shortcode");
+  };
+
   const handleSendClick = () => {
     setIsMoving(true);
     setTimeout(() => {
@@ -321,21 +333,12 @@ export const ReceivePage = () => {
     setPinError("");
 
     try {
-      const response = await fetch(`/api/rooms/${encodeURIComponent(pin)}`);
-      if (!response.ok) {
-        throw new Error(`Room lookup failed: ${response.status}`);
-      }
-
-      const payload = (await response.json()) as { id?: unknown };
-      if (typeof payload.id !== "string" || payload.id.length === 0) {
-        throw new Error("Invalid room id response");
-      }
-
-      window.location.href = `/r/${encodeURIComponent(payload.id)}?source=code`;
-    } catch (error) {
-      console.error(error);
-      setPinError("6桁の番号が見つかりませんでした。番号を再確認してください。");
-    } finally {
+              const roomId = await findRoomIdByShortCode(shortcode);
+              window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}`;
+            } catch (error) {
+              console.error(error);
+              setPinError("6桁の番号が見つかりませんでした。番号を再確認してください。");
+            }finally {
       setIsResolvingPin(false);
     }
   };

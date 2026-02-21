@@ -131,6 +131,13 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
   };
 
   const handleInput = (index: number, e: InputEvent) => {
+type PinInputBlockProps = {
+  onSubmit: (shortCode: string) => Promise<void> | void;
+};
+
+export const PinInputBlock = (props: PinInputBlockProps) => {
+  // 入力フォーカス移動のロジックを簡易的に実装
+  const handleInput = (e: InputEvent) => {
     const target = e.currentTarget;
     if (!(target instanceof HTMLInputElement)) {
       return;
@@ -147,6 +154,12 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
 
     if (index < PIN_INPUT_KEYS.length - 1) {
       focusInput(index + 1);
+    target.value = target.value.replace(/\D/g, "").slice(0, 1);
+
+    const val = target.value;
+    const nextInput = target.nextElementSibling;
+    if (val && nextInput instanceof HTMLInputElement) {
+      nextInput.focus();
     }
   };
 
@@ -187,13 +200,29 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     void Promise.resolve(onSubmit(pin));
   };
 
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+
+    const shortCode = PIN_INPUT_KEYS.map((key) => {
+      const input = form.elements.namedItem(key);
+      return input instanceof HTMLInputElement ? input.value : "";
+    }).join("");
+
+    await props.onSubmit(shortCode);
+  };
+
   return (
-    <div class={containerStyles}>
+    <form action="" class={containerStyles} onSubmit={handleSubmit}>
       <p class={titleStyles}>6桁の番号を入力</p>
       <div class={pinContainerStyles}>
         {PIN_INPUT_KEYS.map((key, index) => (
           <input
             key={key}
+            name={key}
             type="text"
             inputMode="numeric"
             maxLength={1}
