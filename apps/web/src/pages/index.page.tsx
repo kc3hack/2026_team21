@@ -26,6 +26,7 @@ export const TopPage = () => {
     lastSentFile,
     errorMessage,
     fileInputRef,
+    shortcode,
     toggleOpen,
     handleCreateRoom,
   } = useFileSenderConnection();
@@ -77,6 +78,7 @@ export const TopPage = () => {
         <div>
           <h2>QRコード</h2>
           <div ref={qrCodeRef} />
+          <div>Shortcode: {shortcode}</div>
           <button type="button" onClick={toggleOpen}>
             閉じる
           </button>
