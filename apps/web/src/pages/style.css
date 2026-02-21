@@ -35,20 +35,18 @@ body {
   100% { opacity: 0; transform: scale(0) rotate(0deg); }
 }
 
-/* ▼ 修正1：バンザイして喜ぶアニメーション（右腕） ▼ */
 @keyframes wave-left {
   0% { transform: rotate(0deg); }
-  15% { transform: rotate(-60deg); } /* 大きく上に振り上げる */
-  35% { transform: rotate(-30deg); } /* 少し下げる（わちゃわちゃ感） */
+  15% { transform: rotate(-60deg); }
+  35% { transform: rotate(-30deg); }
   55% { transform: rotate(-50deg); }
   75% { transform: rotate(-30deg); }
-  100% { transform: rotate(0deg); }  /* 元に戻る */
+  100% { transform: rotate(0deg); }
 }
 
-/* ▼ 修正1：バンザイして喜ぶアニメーション（左腕） ▼ */
 @keyframes wave-right {
   0% { transform: rotate(0deg); }
-  15% { transform: rotate(60deg); } /* 右腕と逆方向に振り上げる */
+  15% { transform: rotate(60deg); }
   35% { transform: rotate(30deg); }
   55% { transform: rotate(50deg); }
   75% { transform: rotate(30deg); }
@@ -287,58 +285,84 @@ img[alt="head"] {
 
 .qr-container {
   position: absolute;
-  bottom: 0;
+  top: 50%;
   left: 50%;
   z-index: 50;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 500px;
-  height: 90vh;
-  padding: 4rem 2rem 2rem 2rem;
+  justify-content: flex-start;
+  width: 90%;
+  max-width: 420px;
+
+  height: 60vh;
+  min-height: 420px;
+
+  padding: 3rem 0 0 0;
   background: white;
+
   border: 8px solid #ff9800;
-  border-bottom: none;
-  border-radius: 3rem 3rem 0 0;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
-  transform: translate(-50%, 100%);
+  border-radius: 2.5rem;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+
+  overflow: hidden;
+
+  transform: translate(-50%, 100vh);
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .qr-container.is-visible {
-  transform: translate(-50%, 0%);
+  transform: translate(-50%, -50%);
 }
+
 .qr-text {
-  margin: 0;
+  margin: 0 0 2rem 0;
+  padding: 0 2rem;
   font-size: 1.25rem;
   font-weight: bold;
   color: #5e7359;
+  text-align: center;
 }
-.qr-mock-box {
+
+.qr-mock-box,
+#qr-code {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 150px;
-  height: 150px;
+  width: 200px;
+  height: 200px;
   font-weight: bold;
   color: #999;
   background-color: #f0f0f0;
   border: 4px dashed #ccc;
   border-radius: 1rem;
 }
+
 .mock-qr-btn {
-  padding: 1rem 2rem;
+  width: 100%;
+  padding: 1.5rem 1rem;
+  font-size: 1.15rem;
   font-weight: bold;
-  color: #333;
+  color: white;
   text-decoration: none;
-  background-color: #ffa94d;
-  border-radius: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.1s;
+  background-color: #ff9800;
+  border: none;
+  border-radius: 0;
+  text-align: center;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  margin-top: auto;
 }
-.mock-qr-btn:active { transform: scale(0.95); }
+
+.mock-qr-btn:hover {
+  background-color: #e68a00;
+}
+.mock-qr-btn:active {
+  background-color: #cc7a00;
+  transform: none; 
+}
 
 .upload-form-area {
   position: absolute;

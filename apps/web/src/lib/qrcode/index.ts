@@ -31,7 +31,7 @@ export const createQRCode = (text: string) => {
     },
     dotsOptions: {
       type: "extra-rounded",
-      color: "#0af06e",
+      color: "#6c926c",
       roundSize: true,
       gradient: undefined,
     },
@@ -42,11 +42,11 @@ export const createQRCode = (text: string) => {
     image: undefined,
     cornersSquareOptions: {
       type: "extra-rounded",
-      color: "#000000",
+      color: "#5E7359",
     },
     cornersDotOptions: {
       type: "extra-rounded",
-      color: "#000000",
+      color: "#5E7359",
     },
   });
 };
