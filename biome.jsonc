@@ -89,6 +89,10 @@
         "rules": {
           "style": {
             "noHeadElement": "off"
+          },
+          "suspicious": {
+            // 現時点ではロガーが整備されていないので console の利用を許可する
+            "noConsole": "off"
           }
         },
         "domains": {
