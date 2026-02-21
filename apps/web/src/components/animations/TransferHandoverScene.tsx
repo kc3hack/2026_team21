@@ -144,7 +144,7 @@ const handoverClass = css`
   .green-ghost {
     left: -48%;
     transform: scale(0.44);
-    transition: left 1.55s cubic-bezier(0.2, 0.9, 0.22, 1);
+    transition: left 2.9s cubic-bezier(0.2, 0.9, 0.22, 1);
   }
 
   .orange-ghost {
@@ -168,31 +168,31 @@ const handoverClass = css`
   }
 
   &.is-active .orange-ghost {
-    animation: ${orangeArrival} 1.05s cubic-bezier(0.24, 1, 0.38, 1) forwards;
+    animation: ${orangeArrival} 2.3s cubic-bezier(0.24, 1, 0.38, 1) forwards;
   }
 
   &.is-active .green-arm-left {
     transform: rotate(-73deg) translate(10px, 22px);
-    transition-delay: 1.68s;
+    transition-delay: 3.15s;
   }
 
   &.is-active .orange-arm-right {
     transform: rotate(58deg) translate(16px, -10px);
-    transition-delay: 2.05s;
+    transition-delay: 4.45s;
   }
 
   &.is-active .orange-arm-left {
     transform: rotate(-58deg) translate(-16px, -10px);
-    transition-delay: 2.05s;
+    transition-delay: 4.45s;
   }
 
   &.is-active .letter-item {
-    animation: ${letterAppear} 0.65s cubic-bezier(0.24, 1, 0.38, 1) 1.95s forwards;
+    animation: ${letterAppear} 1.05s cubic-bezier(0.24, 1, 0.38, 1) 3.75s forwards;
   }
 
   &.is-active .orange-ghost .cheek {
     opacity: 0.78;
-    transition-delay: 2.14s;
+    transition-delay: 4.6s;
   }
 
   @media (max-width: 600px) {

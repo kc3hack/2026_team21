@@ -28,6 +28,13 @@ const ghostContainerClass = css`
     bottom: 16px;
   }
 
+  @media (max-width: 600px) {
+    &.mobile-middle {
+      bottom: clamp(9.5rem, 29vh, 14rem);
+      transform: translateX(50%) scale(0.43);
+    }
+  }
+
   &.is-entering {
     animation: ${slideInFromRight} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
   }
@@ -39,12 +46,12 @@ const ghostContainerClass = css`
   }
 
   &.is-entering-left {
-    animation: ${slideInFromLeft} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
+    animation: ${slideInFromLeft} 3.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
   }
 
   @media (max-width: 600px) {
     &.is-entering-left {
-      animation: ${slideInFromLeftMobile} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
+      animation: ${slideInFromLeftMobile} 3.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
     }
   }
 
@@ -55,6 +62,10 @@ const ghostContainerClass = css`
     @media (max-width: 600px) {
       right: 150%;
     }
+  }
+
+  &.is-moving.is-moving-slow {
+    transition-duration: 3.4s;
   }
 
   &.is-sleeping {
@@ -81,11 +92,11 @@ const ghostContainerClass = css`
     opacity: 1;
   }
 
-  &.is-moving .ghost-eye {
+  &.is-moving.use-wake-eye .ghost-eye {
     opacity: 0;
   }
 
-  &.is-moving .wake-eye {
+  &.is-moving.use-wake-eye .wake-eye {
     opacity: 1;
   }
 
@@ -273,6 +284,9 @@ type Props = {
   showNotes?: boolean;
   enteringFromRight?: boolean;
   enteringFromLeft?: boolean;
+  wakeEyesOnMove?: boolean;
+  slowMove?: boolean;
+  mobilePlacement?: "bottom" | "button";
 };
 
 export const SlidingGhost = ({
@@ -281,12 +295,17 @@ export const SlidingGhost = ({
   showNotes = false,
   enteringFromRight = false,
   enteringFromLeft = false,
+  wakeEyesOnMove = true,
+  slowMove = false,
+  mobilePlacement = "bottom",
 }: Props) => {
   const bodyId = "sliding-ghost-body";
   const isInteractive = !isMoving && !isSleeping;
   const className = `${ghostContainerClass} ${isMoving ? "is-moving" : ""} ${isSleeping ? "is-sleeping" : ""} ${
     enteringFromRight ? "is-entering" : ""
-  } ${enteringFromLeft ? "is-entering-left" : ""}`;
+  } ${enteringFromLeft ? "is-entering-left" : ""} ${wakeEyesOnMove ? "use-wake-eye" : ""} ${
+    slowMove ? "is-moving-slow" : ""
+  } ${mobilePlacement === "button" ? "mobile-middle" : ""}`;
 
   return (
     <div class={className}>

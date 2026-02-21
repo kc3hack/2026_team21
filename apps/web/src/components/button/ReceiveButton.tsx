@@ -23,6 +23,12 @@ export const ReceiveButton = ({ onClick }: Props) => {
 
     &:hover { transform: scale(1.1); }
     &:active { transform: scale(0.95); }
+
+    @media (max-width: 600px) {
+      margin-top: 1.05rem;
+      font-size: 1.68rem;
+      padding: 0.55rem 0.9rem;
+    }
   `;
 
   return (

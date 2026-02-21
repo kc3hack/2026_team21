@@ -10,7 +10,6 @@ import { ReceiveButton } from "@/components/button/ReceiveButton";
 import { LogoIcon } from "@/components/Logo";
 import { useFileSenderConnection } from "@/hooks/useFileSenderConnection";
 import { useQRCode } from "@/hooks/useQRCode";
-import { apiClient } from "@/pages/api/index.client";
 import { Page } from "@/pages/router";
 
 type SenderFlowStage = "idle" | "qr" | "transferring" | "handover" | "completed";
@@ -53,7 +52,7 @@ const responsiveWrapper = css`
 
   @media (max-width: 600px) {
     min-height: 100dvh;
-    padding: 0 0.8rem calc(6.8rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.4rem 0.9rem calc(4.4rem + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
   }
 `;
@@ -65,6 +64,11 @@ const topSectionClass = css`
   justify-content: center;
   align-items: flex-start;
   z-index: 120;
+
+  @media (max-width: 600px) {
+    flex: 0 0 auto;
+    margin-top: 0.25rem;
+  }
 `;
 
 const centerSectionClass = css`
@@ -80,9 +84,9 @@ const centerSectionClass = css`
   box-sizing: border-box;
 
   @media (max-width: 600px) {
-    max-width: 22rem;
+    max-width: 23.5rem;
     padding: 0 0.4rem;
-    margin: 0.6rem 0;
+    margin: 0.35rem 0;
   }
 `;
 
@@ -91,7 +95,7 @@ const spacerClass = css`
   width: 100%;
 
   @media (max-width: 600px) {
-    min-height: 5.5rem;
+    min-height: 1.8rem;
   }
 `;
 
@@ -214,6 +218,7 @@ export const TopPage = () => {
     fileInputRef,
     shortcode,
     receiverJoinMethod,
+    receiverConfirmedByOk,
     closeModal,
     handleCreateRoom,
   } = useFileSenderConnection();
@@ -267,22 +272,28 @@ export const TopPage = () => {
     setFlowStage("handover");
     const timer = setTimeout(() => {
       setFlowStage("completed");
-    }, 3900);
+    }, 7600);
 
     return () => clearTimeout(timer);
   }, [flowStage, lastSentFile]);
 
-  const findRoomIdByShortCode = async (shortcode: string) => {
-    const validate = await apiClient.rooms[":shortcode"].$get({ param: { shortcode } });
-    if (validate.ok) {
-      const { id, shortcode } = await validate.json();
-      console.log("Found room", id, shortcode);
-      return id;
-    } else {
-      throw new Error("Invalid shortcode");
+  useEffect(() => {
+    if (flowStage !== "completed") {
+      return;
     }
-  };
-  // ファイル選択ダイアログを開く
+
+    if (receiverConfirmedByOk) {
+      window.location.href = "/";
+      return;
+    }
+
+    const fallbackTimer = setTimeout(() => {
+      window.location.href = "/";
+    }, 5000);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [flowStage, receiverConfirmedByOk]);
+
   const handleClickSelect = () => {
     fileInputRef.current?.click();
   };
@@ -314,7 +325,7 @@ export const TopPage = () => {
   };
 
   const handleCompleteOk = () => {
-    window.location.href = "/?from=complete";
+    window.location.href = "/";
   };
 
   const sendProgressPercent = lastSentFile ? 100 : parseProgressPercent(sendProgress);
@@ -323,14 +334,13 @@ export const TopPage = () => {
   const ghostIsSleeping = flowStage === "qr";
   const ghostIsMoving = flowStage === "transferring" || isNavigatingToReceive;
   const showGhostNotes = flowStage === "idle" && !isNavigatingToReceive;
+  const useWakeEyesOnMove = flowStage === "transferring";
   const stageText =
     flowStage === "transferring"
       ? "ファイル転送中..."
-      : flowStage === "handover" || flowStage === "completed"
-        ? "転送完了の演出中..."
-        : flowStage === "qr"
-          ? "相手にQRコードまたは6桁番号を共有してください"
-          : "";
+      : flowStage === "qr"
+        ? "相手にQRコードまたは6桁番号を共有してください"
+        : "";
 
   return (
     <div class={responsiveWrapper}>
@@ -370,6 +380,9 @@ export const TopPage = () => {
           showNotes={showGhostNotes}
           enteringFromRight={isEnteringFromRight}
           enteringFromLeft={isEnteringFromLeft}
+          wakeEyesOnMove={useWakeEyesOnMove}
+          slowMove={flowStage === "transferring"}
+          mobilePlacement={flowStage === "idle" && !isNavigatingToReceive ? "button" : "bottom"}
         />
       )}
 
