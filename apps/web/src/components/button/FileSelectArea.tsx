@@ -16,10 +16,11 @@ const containerStyles = css`
 
   /* モバイル対応：さらにコンパクトに */
   @media (max-width: 600px) {
-    max-width: 280px;   /* 横幅を絞る */
-    padding: 1.2rem 1rem;
-    gap: 0.5rem;
-    border-width: 4px;  /* 枠線を少し細く */
+    width: min(94vw, 21rem);
+    max-width: 21rem;
+    padding: 1.45rem 1.1rem;
+    gap: 0.65rem;
+    border-width: 4px;
   }
 `;
 
@@ -41,8 +42,8 @@ const dropZoneStyles = css`
   box-sizing: border-box;
 
   @media (max-width: 600px) {
-    padding: 1.5rem 0.5rem;
-    font-size: 1rem;    /* 文字を小さく */
+    padding: 1.7rem 0.7rem;
+    font-size: 1.08rem;
   }
 
   &:hover {
@@ -67,7 +68,7 @@ export const FileSelectArea = ({ onSelect }: Props) => {
 
       <span style="color: #fff; font-weight: bold; font-size: 1.1rem;">または</span>
 
-      <div style="width: 100%; display: flex; justify-content: center; transform: scale(0.8);">
+      <div style="width: 100%; display: flex; justify-content: center; transform: scale(0.8);" class="file-select-btn">
         <GreenButton text="ファイルを選択" onClick={onSelect} />
       </div>
     </div>

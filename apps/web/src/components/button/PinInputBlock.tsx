@@ -15,8 +15,9 @@ const containerStyles = css`
   margin: 0 auto;
 
   @media (max-width: 600px) {
-    max-width: 300px;
-    padding: 1.5rem 1rem;
+    width: min(95vw, 22.4rem);
+    max-width: 22.4rem;
+    padding: 1.65rem 1.15rem;
     border-width: 4px;
   }
 `;
@@ -34,8 +35,13 @@ const titleStyles = css`
 
 const pinContainerStyles = css`
   display: flex;
+  width: 100%;
   gap: 0.5rem;
   justify-content: center;
+
+  @media (max-width: 600px) {
+    gap: 0.38rem;
+  }
 `;
 
 const pinInputStyles = css`
@@ -58,9 +64,9 @@ const pinInputStyles = css`
   }
 
   @media (max-width: 600px) {
-    width: 2.2rem;
-    height: 3rem;
-    font-size: 1.5rem;
+    width: 2.28rem;
+    height: 3.18rem;
+    font-size: 1.45rem;
   }
 `;
 
@@ -102,6 +108,10 @@ const helperTextStyles = css`
   line-height: 1.65;
   text-align: center;
   white-space: pre-line;
+
+  @media (max-width: 600px) {
+    font-size: 0.98rem;
+  }
 `;
 
 const PIN_INPUT_KEYS = ["pin-1", "pin-2", "pin-3", "pin-4", "pin-5", "pin-6"] as const;

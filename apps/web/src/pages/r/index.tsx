@@ -27,7 +27,7 @@ const responsiveWrapper = css`
 
   @media (max-width: 600px) {
     min-height: 100dvh;
-    padding: 0 0.8rem calc(7.1rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.4rem 0.9rem calc(4.7rem + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
   }
 `;
@@ -39,6 +39,11 @@ const topSectionClass = css`
   justify-content: center;
   align-items: flex-start;
   z-index: 120;
+
+  @media (max-width: 600px) {
+    flex: 0 0 auto;
+    margin-top: 0.25rem;
+  }
 `;
 
 const centerSectionClass = css`
@@ -54,9 +59,9 @@ const centerSectionClass = css`
   box-sizing: border-box;
 
   @media (max-width: 600px) {
-    max-width: 23rem;
+    max-width: 25rem;
     padding: 0 0.4rem;
-    margin: 0.55rem 0;
+    margin: 0.35rem 0;
   }
 `;
 
@@ -65,7 +70,7 @@ const spacerClass = css`
   width: 100%;
 
   @media (max-width: 600px) {
-    min-height: 6rem;
+    min-height: 1.8rem;
   }
 `;
 
@@ -76,8 +81,8 @@ const receiveHeadingClass = css`
   margin: 0 0 2rem;
 
   @media (max-width: 600px) {
-    font-size: 1.45rem;
-    margin-bottom: 1.1rem;
+    font-size: 1.62rem;
+    margin-bottom: 0.95rem;
   }
 `;
 
@@ -144,18 +149,18 @@ const waitCardClass = css`
   }
 
   @media (max-width: 600px) {
-    width: min(92vw, 20.5rem);
+    width: min(94vw, 22.6rem);
     border-radius: 18px;
     border-width: 4px;
-    padding: 1.05rem 0.9rem;
+    padding: 1.24rem 1.04rem;
 
     .wait-title {
-      font-size: 1.1rem;
+      font-size: 1.22rem;
     }
 
     .wait-body {
       margin-top: 0.6rem;
-      font-size: 0.88rem;
+      font-size: 0.95rem;
       line-height: 1.45;
     }
 
@@ -166,12 +171,12 @@ const waitCardClass = css`
 
     .progress-text {
       margin-top: 0.45rem;
-      font-size: 0.82rem;
+      font-size: 0.92rem;
     }
 
     .file-text,
     .error-text {
-      font-size: 0.8rem;
+      font-size: 0.89rem;
     }
   }
 `;
@@ -243,7 +248,10 @@ type Props = { roomId: string };
 
 export const RoomPage = ({ roomId }: Props) => {
   const entryMethod = resolveEntryMethodFromQuery();
-  const { receiveProgress, lastReceivedFile, errorMessage } = useWebRTCConnection(roomId, entryMethod);
+  const { receiveProgress, lastReceivedFile, errorMessage, sendControlMessage } = useWebRTCConnection(
+    roomId,
+    entryMethod,
+  );
   const [isCompleteOpen, setIsCompleteOpen] = useState(false);
 
   useEffect(() => {
@@ -255,6 +263,7 @@ export const RoomPage = ({ roomId }: Props) => {
   const receivePercent = lastReceivedFile ? 100 : parseProgressPercent(receiveProgress);
 
   const handleCompleteOk = () => {
+    sendControlMessage({ type: "receiver-ok" });
     window.location.href = "/";
   };
 
@@ -335,7 +344,7 @@ export const ReceivePage = () => {
 
     try {
       const roomId = await findRoomIdByShortCode(pin);
-      window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}`;
+      window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}?source=code`;
     } catch (error) {
       console.error(error);
       setPinError("6桁の番号が見つかりませんでした。番号を再確認してください。");

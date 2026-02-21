@@ -1,4 +1,4 @@
-import { useEffect, useState } from "hono/jsx";
+import { useEffect, useRef, useState } from "hono/jsx";
 import { fetchTurnIceServer, getSignalUrl } from "@/lib/realtime/client-utils";
 import { FileReceiver } from "@/lib/realtime/file-transfer";
 import { PeerConnectionManager } from "@/lib/realtime/peer-connection";
@@ -28,6 +28,7 @@ export const useWebRTCConnection = (roomId: string, entryMethod: ReceiverEntryMe
   const [receiveProgress, setReceiveProgress] = useState("0 / 0 bytes");
   const [lastReceivedFile, setLastReceivedFile] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const dataChannelRef = useRef<RTCDataChannel | null>(null);
 
   useEffect(() => {
     let isDisposed = false;
@@ -126,6 +127,7 @@ export const useWebRTCConnection = (roomId: string, entryMethod: ReceiverEntryMe
         setPeerStatus("connected");
         setDataChannelStatus("open");
       });
+      dataChannelRef.current = channel;
 
       if (!hasSharedEntryMeta && channel.readyState === "open") {
         hasSharedEntryMeta = true;
@@ -146,6 +148,7 @@ export const useWebRTCConnection = (roomId: string, entryMethod: ReceiverEntryMe
       setStateIfActive(() => {
         setDataChannelStatus("closed");
       });
+      dataChannelRef.current = null;
     });
 
     peerManager.on("disconnected", () => {
@@ -153,6 +156,7 @@ export const useWebRTCConnection = (roomId: string, entryMethod: ReceiverEntryMe
         resetPeerState();
         setPeerStatus("disconnected");
       });
+      dataChannelRef.current = null;
     });
 
     peerManager.on("datachannel-message", (data) => {
@@ -185,10 +189,25 @@ export const useWebRTCConnection = (roomId: string, entryMethod: ReceiverEntryMe
 
     return () => {
       isDisposed = true;
+      dataChannelRef.current = null;
       signaling.disconnect();
       peerManager.cleanup();
     };
   }, [roomId, entryMethod]);
+
+  const sendControlMessage = (payload: { type: string; [key: string]: unknown }): boolean => {
+    const channel = dataChannelRef.current;
+    if (!channel || channel.readyState !== "open") {
+      return false;
+    }
+
+    try {
+      channel.send(JSON.stringify(payload));
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   return {
     wsStatus,
@@ -198,5 +217,6 @@ export const useWebRTCConnection = (roomId: string, entryMethod: ReceiverEntryMe
     receiveProgress,
     lastReceivedFile,
     errorMessage,
+    sendControlMessage,
   };
 };

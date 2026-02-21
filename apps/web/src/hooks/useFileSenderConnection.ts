@@ -23,6 +23,7 @@ export const useFileSenderConnection = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [shortcode, setShortcode] = useState("");
   const [receiverJoinMethod, setReceiverJoinMethod] = useState<ReceiverJoinMethod>("unknown");
+  const [receiverConfirmedByOk, setReceiverConfirmedByOk] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export const useFileSenderConnection = () => {
     setErrorMessage("");
     setLastSentFile("");
     setReceiverJoinMethod("unknown");
+    setReceiverConfirmedByOk(false);
 
     signaling.on("connected", () => {
       setStateIfActive(() => setWsStatus("connected"));
@@ -160,6 +162,11 @@ export const useFileSenderConnection = () => {
         const joinMethod = payload.joinMethod;
         if (payload.type === "receiver-join-meta" && (joinMethod === "qr" || joinMethod === "code")) {
           setStateIfActive(() => setReceiverJoinMethod(joinMethod));
+          return;
+        }
+
+        if (payload.type === "receiver-ok") {
+          setStateIfActive(() => setReceiverConfirmedByOk(true));
         }
       } catch {
         // 送信ファイルのメッセージ以外は無視する
@@ -235,6 +242,7 @@ export const useFileSenderConnection = () => {
       setShortcode(payload.shortcode);
       setErrorMessage("");
       setReceiverJoinMethod("unknown");
+      setReceiverConfirmedByOk(false);
 
       // モーダルを開く
       setUrl(uri);
@@ -261,6 +269,7 @@ export const useFileSenderConnection = () => {
     fileInputRef,
     shortcode,
     receiverJoinMethod,
+    receiverConfirmedByOk,
     toggleOpen,
     closeModal,
     handleCreateRoom,
