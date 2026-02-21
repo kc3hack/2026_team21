@@ -70,7 +70,9 @@ describe("SignalingClient", () => {
   });
 
   function getLatestWs(): MockWebSocket {
-    return MockWebSocket.instances.at(-1)!;
+    const ws = MockWebSocket.instances.at(-1);
+    if (!ws) throw new Error("No MockWebSocket instance found");
+    return ws;
   }
 
   /* ── 接続 / 切断 ── */
