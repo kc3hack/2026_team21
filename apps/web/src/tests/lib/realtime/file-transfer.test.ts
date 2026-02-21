@@ -21,6 +21,7 @@ function createMockChannel(options?: { bufferedAmount?: number }): RTCDataChanne
 
 /* ── Mock File ── */
 function createMockFile(name: string, content: Uint8Array, mimeType = "application/octet-stream"): File {
+  // @ts-expect-error for testings
   const blob = new Blob([content], { type: mimeType });
   return new File([blob], name, { type: mimeType });
 }
