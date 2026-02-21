@@ -1,5 +1,5 @@
-import { Layout } from "@/pages/layout";
 import { Hono } from "hono";
+import { Layout } from "@/pages/layout";
 import { RoomClient } from "./RoomClient";
 
 const app = new Hono();
@@ -9,7 +9,6 @@ app.post("/:roomId", async (c) => {
   const file = formData.get("file") as File;
   const backTo = formData.get("back_to");
 
-  // biome-ignore lint/suspicious/noConsole: for debugging
   console.log(file);
 
   return c.redirect(backTo?.toString() || c.req.path || "/");

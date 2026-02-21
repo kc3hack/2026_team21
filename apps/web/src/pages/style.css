@@ -242,22 +242,22 @@ body {
   z-index: 50;
   display: flex;
   flex-direction: column;
+  gap: 2rem;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
   width: 100%;
   max-width: 500px;
   /* 画面のほぼ全域を覆い隠す高さ */
   height: 90vh;
   padding: 4rem 2rem 2rem 2rem;
   background: white;
-  
+
   /* 上だけ丸く、下は画面外まで突き抜ける直角 */
-  border: 8px solid #FF9800;
+  border: 8px solid #ff9800;
   border-bottom: none;
   border-radius: 3rem 3rem 0 0;
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
-  
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+
   /* 初期状態：画面の下に隠しておく */
   transform: translate(-50%, 100%);
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -269,33 +269,33 @@ body {
 }
 
 .qr-text {
+  margin: 0;
   font-size: 1.25rem;
   font-weight: bold;
-  color: #5E7359;
-  margin: 0;
+  color: #5e7359;
 }
 
 .qr-mock-box {
-  width: 150px;
-  height: 150px;
-  background-color: #f0f0f0;
-  border: 4px dashed #ccc;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  width: 150px;
+  height: 150px;
   font-weight: bold;
+  color: #999;
+  background-color: #f0f0f0;
+  border: 4px dashed #ccc;
   border-radius: 1rem;
 }
 
 .mock-qr-btn {
-  background-color: #ffa94d;
-  color: #333;
-  font-weight: bold;
   padding: 1rem 2rem;
-  border-radius: 2rem;
+  font-weight: bold;
+  color: #333;
   text-decoration: none;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  background-color: #ffa94d;
+  border-radius: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.1s;
 }
 .mock-qr-btn:active {
@@ -314,8 +314,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: transform 0.4s ease-in-out;
   transform-origin: center center;
+  transition: transform 0.4s ease-in-out;
 }
 .ghost-tilter.is-tilting {
   transform: rotate(-15deg);
@@ -328,8 +328,9 @@ body {
 
 #ghost-arm-left.is-presenting-left {
   /* 左腕の肩の関節位置を軸にする */
-  transform-origin: 60% 54%;
   transform: rotate(-75deg) !important;
+  /* 左腕の肩の関節位置を軸にする */
+  transform-origin: 60% 54%;
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -340,22 +341,22 @@ body {
 
 .upload-form-area {
   position: absolute;
-  right: 15vw;
   top: 50%;
-  transform: translateY(-50%) scale(0);
-  opacity: 0;
-  width: 90%;
-  max-width: 380px;
-  background: white;
-  padding: 2.5rem 2rem;
-  border-radius: 2rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  border: 4px dashed #758E6F;
+  right: 15vw;
+  z-index: 40;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 1.5rem;
-  z-index: 40;
+  align-items: center;
+  width: 90%;
+  max-width: 380px;
+  padding: 2.5rem 2rem;
+  background: white;
+  border: 4px dashed #758e6f;
+  border-radius: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(-50%) scale(0);
 }
 
 /* 既存のコード */
@@ -364,22 +365,31 @@ body {
 }
 
 @keyframes pop-bounce {
-  0% { transform: translateY(-50%) scale(0); opacity: 0; }
-  60% { transform: translateY(-50%) scale(1.05); opacity: 1; }
-  100% { transform: translateY(-50%) scale(1); opacity: 1; }
+  0% {
+    transform: translateY(-50%) scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-50%) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+  }
 }
 
 .file-input-box {
   width: 100%;
   padding: 1rem;
+  font-size: 1rem;
   border: 2px solid #ccc;
   border-radius: 1rem;
-  font-size: 1rem;
 }
 .status-text {
-  color: #5E7359;
   font-size: 2rem;
   font-weight: bold;
+  color: #5e7359;
   transition: opacity 0.3s ease;
 }
 

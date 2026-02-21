@@ -1,7 +1,7 @@
+import { Hono } from "hono";
 import { Layout } from "@/pages/layout";
 import { RoomPage } from "@/pages/r";
 import { renderer } from "@/pages/renderer";
-import { Hono } from "hono";
 import { HomeClient } from "./HomeClient";
 
 const app = new Hono();
