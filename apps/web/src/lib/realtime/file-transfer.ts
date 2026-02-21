@@ -19,7 +19,7 @@ export type FileReceiveResult = {
   data: Blob;
 };
 
-/* DateChannelでファイルを送信する */
+/* DataChannelでファイルを送信する */
 export async function sendFile(
   channel: RTCDataChannel,
   file: File,
