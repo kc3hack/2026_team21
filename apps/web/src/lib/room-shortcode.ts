@@ -7,8 +7,9 @@ const SHORTCODE_TTL = 10 * 60; // 15分（秒単位）
 const MAX_RETRIES = 10; // 重複時の最大リトライ回数
 
 /**
- * 6桁のランダムな数字を生成
- * Math.random() で偏りがあるが短期間かつリトライがあるので許容する
+ * 6桁のランダムな数字を生成。
+ * 生成時点では衝突の可能性があることに注意すること。
+ * Math.random() で偏りがあるが、用途が短期間かつリトライがあるので許容する。
  */
 function generateSixDigitCode(): string {
   const min = 100000;
@@ -48,6 +49,17 @@ export async function createShortcodeForRoom(kv: KVNamespace, snowflakeId: strin
   }
 
   throw new Error(`Failed to generate unique shortcode after ${MAX_RETRIES} retries`);
+}
+
+export async function touchShortcode(kv: KVNamespace, snowflakeId: string): Promise<void> {
+  const shortcode = await getShortcodeFromSnowflakeId(kv, snowflakeId);
+  if (shortcode) {
+    // 既存のマッピングを更新してTTLをリセット
+    await Promise.all([
+      kv.put(`snowflake:${snowflakeId}`, shortcode, { expirationTtl: SHORTCODE_TTL }),
+      kv.put(`shortcode:${shortcode}`, snowflakeId, { expirationTtl: SHORTCODE_TTL }),
+    ]);
+  }
 }
 
 /**
