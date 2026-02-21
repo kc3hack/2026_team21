@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createShortcodeForRoom, getShortcodeFromSnowflakeId, getSnowflakeIdFromShortcode } from "@/lib/room-shortcode";
+import { generateSnowflakeId } from "@/lib/snowflake";
 
 type KvState = Record<string, string>;
 
@@ -35,6 +36,14 @@ function mockRandomUint32Values(values: number[]) {
 describe("room-shortcode", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("6桁の short code を生成する", async () => {
+    const { kv } = createMockKv();
+    const snowflakeId = generateSnowflakeId();
+
+    const shortcode = await createShortcodeForRoom(kv, snowflakeId);
+    expect(shortcode).toMatch(/^\d{6}$/);
   });
 
   it("既存マッピングがあればその short code を返す", async () => {
