@@ -32,6 +32,7 @@ class MockRTCPeerConnection {
   localDescription: RTCSessionDescription | null = null;
   remoteDescription: RTCSessionDescription | null = null;
   connectionState: RTCPeerConnectionState = "new";
+  signalingState: RTCSignalingState = "stable";
   onicecandidate: ((ev: RTCPeerConnectionIceEvent) => void) | null = null;
   ondatachannel: ((ev: RTCDataChannelEvent) => void) | null = null;
   onconnectionstatechange: ((ev: Event) => void) | null = null;
@@ -49,6 +50,11 @@ class MockRTCPeerConnection {
       type: desc.type!,
       sdp: desc.sdp ?? "offer-sdp",
     } as RTCSessionDescription;
+    if (desc.type === "offer") {
+      this.signalingState = "have-local-offer";
+    } else if (desc.type === "answer") {
+      this.signalingState = "stable";
+    }
   });
 
   setRemoteDescription = vi.fn(async (desc: RTCSessionDescriptionInit) => {
@@ -57,6 +63,11 @@ class MockRTCPeerConnection {
       type: desc.type!,
       sdp: desc.sdp ?? "",
     } as RTCSessionDescription;
+    if (desc.type === "offer") {
+      this.signalingState = "have-remote-offer";
+    } else if (desc.type === "answer") {
+      this.signalingState = "stable";
+    }
   });
 
   addIceCandidate = vi.fn(async () => {});
@@ -225,6 +236,21 @@ describe("PeerConnectionManager", () => {
 
       // pc が null のまま answer を受信 → エラーにならないこと
       await signaling._trigger("answer", "sdp");
+    });
+
+    it("have-local-offer 以外の状態で受信した answer は無視する", async () => {
+      const signaling = createMockSignaling();
+      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      await manager.createOffer();
+      const pc = latestMockPc;
+      pc.signalingState = "stable";
+
+      await signaling._trigger("answer", "stale-answer-sdp");
+
+      expect(pc.setRemoteDescription).not.toHaveBeenCalledWith({
+        type: "answer",
+        sdp: "stale-answer-sdp",
+      });
     });
   });
 
