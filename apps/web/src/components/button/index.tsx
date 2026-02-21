@@ -2,9 +2,10 @@ import { css } from "hono/css";
 
 type Props = {
   text: string;
+  onClick?: () => void;
 };
 
-export const GreenButton = ({ text }: Props) => {
+export const GreenButton = ({ text, onClick }: Props) => {
   const styles = css`
     padding: 1.25rem 4rem;
     font-size: 2rem;
@@ -30,7 +31,7 @@ export const GreenButton = ({ text }: Props) => {
   `;
 
   return (
-    <button type="button" class={styles} id="create-room-btn">
+    <button type="button" class={styles} id="create-room-btn" onClick={onClick}>
       {text}
     </button>
   );
