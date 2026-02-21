@@ -14,7 +14,7 @@ export const TopPageRoute = () => {
   return app;
 };
 
-// 全体のレイアウトを管理するスタイル
+// 全体のレイアウト管理
 const responsiveWrapper = css`
   position: relative;
   overflow: hidden;
@@ -24,8 +24,7 @@ const responsiveWrapper = css`
   flex-direction: column;
   align-items: center;
 
-  /* style.css の .logo-area や .logo-img の絶対配置をリセットし、
-     LogoIconコンポーネント側での管理を優先させる */
+  /* グローバルな絶対配置指定をコンポーネント側の管理で上書き */
   & .logo-area {
     position: relative;
     top: 0;
@@ -34,31 +33,26 @@ const responsiveWrapper = css`
 
 export const TopPage = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMoving, setIsMoving] = useState(false);
+  const [isMoving, setIsMoving] = useState(false); // お化けの左スライドアウト状態
   const [url, setUrl] = useState("");
   const { ref: qrCodeRef } = useQRCode(url);
 
-  // モーダルの開閉
+  // QRコードモーダルの切り替え
   const toggleOpen = () => {
     setIsOpen(!isOpen);
-    if (!isOpen) setIsMoving(false); // 閉じるときにアニメーション状態もリセット
+    if (!isOpen) setIsMoving(false); // 閉じるときにアニメーションをリセット
   };
 
-  // 部屋作成（送信開始）処理
+  // 送信処理（ファイル選択時）：左へスライドアウト
   const handleCreateRoom = () => {
     void (async () => {
-      // お化けのアニメーションを開始
       setIsMoving(true);
 
       const response = await fetch("/api/rooms", { method: "POST" });
-      if (!response.ok) {
-        throw new Error(`Failed to create room: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Failed to create room: ${response.status}`);
       
       const payload = (await response.json()) as { id?: string };
-      if (!payload.id) {
-        throw new Error("Invalid room id response");
-      }
+      if (!payload.id) throw new Error("Invalid room id response");
 
       const uri = `/r/${encodeURIComponent(payload.id)}`;
 
@@ -73,7 +67,14 @@ export const TopPage = () => {
     });
   };
 
-  // 隠しinputを発火させる
+  // 受信ボタンクリック時：左へスライドアウトしてから遷移
+  const handleReceiveClick = () => {
+    setIsMoving(true);
+    setTimeout(() => {
+      window.location.href = "/r";
+    }, 1500);
+  };
+
   const handleClickSelect = () => {
     const input = document.getElementById("hidden-file-input");
     input?.click();
@@ -83,16 +84,16 @@ export const TopPage = () => {
     <div class={responsiveWrapper}>
       <Style />
       
-      {/* 1. 上部エリア：ロゴ（スマホ時はLogoIcon内で自動的に小さくなる） */}
+      {/* 1. 上部エリア：ロゴ */}
       <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: flex-start; z-index: 120;">
         <LogoIcon />
       </div>
 
-      {/* 2. 中央エリア：ファイル選択と受信ボタン（常に画面中央） */}
+      {/* 2. 中央エリア：メインボタン群 */}
       <div style="z-index: 100; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; padding: 0 20px; margin: 1rem 0;">
         <FileSelectArea onSelect={handleClickSelect} />
         
-        <ReceiveButton />
+        <ReceiveButton onClick={handleReceiveClick} />
         
         <input 
           type="file" 
@@ -102,15 +103,15 @@ export const TopPage = () => {
         />
       </div>
 
-      {/* 3. 下部エリア：上部と同じ比率のスペーサー */}
+      {/* 3. 下部エリア：スペーサー（中央配置を維持） */}
       <div style="flex: 1; width: 100%;"></div>
 
-      {/* 緑のお化けアニメーション（右端から左へ移動） */}
+      {/* 緑のお化けアニメーション（isMoving で左へスライドアウト） */}
       <SlidingGhost isMoving={isMoving} />
 
-      {/* 送信後のQRコード表示モーダル */}
+      {/* QRコード表示モーダル */}
       {isOpen && (
-        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; background: white; padding: 2rem; border: 6px solid #333; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; background: white; padding: 2rem; border: 6px solid #333; border-radius: 24px;">
           <h2 style="font-weight: 900; margin-bottom: 1rem;">QRコード</h2>
           <div ref={qrCodeRef} />
           <button 

@@ -1,11 +1,11 @@
-// apps/web/src/components/button/ReceiveButton.tsx
+// apps/web/src/components/button/SendBackButton.tsx
 import { css } from "hono/css";
 
 type Props = {
   onClick: () => void;
 };
 
-export const ReceiveButton = ({ onClick }: Props) => {
+export const SendBackButton = ({ onClick }: Props) => {
   const styles = css`
     margin-top: 1.5rem;
     background: none;
@@ -15,10 +15,11 @@ export const ReceiveButton = ({ onClick }: Props) => {
     font-weight: 900;
     color: white;
     cursor: pointer;
+    /* オレンジの縁取り（袋文字） */
     text-shadow: 
-      2px 2px 0 #758e6f, -2px -2px 0 #758e6f, 2px -2px 0 #758e6f,
-      -2px 2px 0 #758e6f, 0 2px 0 #758e6f, 0 -2px 0 #758e6f,
-      2px 0 0 #758e6f, -2px 0 0 #758e6f;
+      2px 2px 0 #f6ad49, -2px -2px 0 #f6ad49, 2px -2px 0 #f6ad49,
+      -2px 2px 0 #f6ad49, 0 2px 0 #f6ad49, 0 -2px 0 #f6ad49,
+      2px 0 0 #f6ad49, -2px 0 0 #f6ad49;
     transition: transform 0.1s ease;
 
     &:hover { transform: scale(1.1); }
@@ -27,7 +28,7 @@ export const ReceiveButton = ({ onClick }: Props) => {
 
   return (
     <button type="button" class={styles} onClick={onClick}>
-      受け取る場合はこちら
+      送信する場合はこちら
     </button>
   );
 };

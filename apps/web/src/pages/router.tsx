@@ -2,7 +2,8 @@ import { CounterPage } from "@/components/pages/counter/index.page";
 import { registerComponent } from "@/lib/client/loader";
 import { escapeJsonForHtml } from "@/lib/escape";
 import { TopPage } from "@/pages/index.page";
-import { RoomPage } from "@/pages/r";
+import { RoomPage, ReceivePage } from "@/pages/r";
+
 
 /**
  * URLパスとClient Componentを紐付けるレジストリ。
@@ -13,6 +14,7 @@ import { RoomPage } from "@/pages/r";
 const components = {
   "/": TopPage,
   "/counter": CounterPage,
+  "/r": ReceivePage,
   "/room/:roomId": RoomPage,
 } as const;
 
