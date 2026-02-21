@@ -9,6 +9,7 @@ export type SignalingEventMap = {
   "room-full": () => void;
   connected: () => void;
   disconnected: () => void;
+  error: (error: Error) => void;
 };
 
 /* シグナリングクライアント */
@@ -30,7 +31,13 @@ export class SignalingClient {
     });
 
     this.ws.addEventListener("message", (event) => {
-      const message: ServerMessage = JSON.parse(event.data as string);
+      let message: ServerMessage;
+      try {
+        message = JSON.parse(event.data as string);
+      } catch {
+        this.emit("error", new Error(`Failed to parse signaling message: ${event.data}`));
+        return;
+      }
       switch (message.type) {
         case "offer":
           this.emit("offer", message.sdp);

@@ -195,6 +195,32 @@ describe("SignalingClient", () => {
     expect(onRoomFull).toHaveBeenCalledOnce();
   });
 
+  /* ── JSON パースエラー ── */
+  it("不正な JSON を受信すると error イベントが発火する", () => {
+    const client = new SignalingClient(TEST_URL);
+    const onError = vi.fn();
+    client.on("error", onError);
+
+    client.connect();
+    const ws = getLatestWs();
+    ws.simulateEvent("message", { data: "not-json!!!" });
+
+    expect(onError).toHaveBeenCalledOnce();
+    expect(onError.mock.calls[0][0]).toBeInstanceOf(Error);
+    expect(onError.mock.calls[0][0].message).toContain("Failed to parse signaling message");
+  });
+
+  it("不正な JSON を受信してもイベントハンドラーはクラッシュしない", () => {
+    const client = new SignalingClient(TEST_URL);
+    client.connect();
+    const ws = getLatestWs();
+
+    // error リスナー未登録でも例外にならない
+    expect(() => {
+      ws.simulateEvent("message", { data: "{invalid" });
+    }).not.toThrow();
+  });
+
   /* ── イベントリスナー管理 ── */
   it("on() で複数リスナーを登録でき、すべて呼ばれる", () => {
     const client = new SignalingClient(TEST_URL);
