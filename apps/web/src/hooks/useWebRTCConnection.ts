@@ -4,6 +4,8 @@ import { FileReceiver } from "@/lib/realtime/file-transfer";
 import { PeerConnectionManager } from "@/lib/realtime/peer-connection";
 import { SignalingClient } from "@/lib/realtime/signaling-client";
 
+export type ReceiverEntryMethod = "qr" | "code";
+
 const downloadReceivedFile = (name: string, data: Blob): void => {
   const url = URL.createObjectURL(data);
   const anchor = document.createElement("a");
@@ -18,7 +20,7 @@ const downloadReceivedFile = (name: string, data: Blob): void => {
   }, 30_000);
 };
 
-export const useWebRTCConnection = (roomId: string) => {
+export const useWebRTCConnection = (roomId: string, entryMethod: ReceiverEntryMethod = "qr") => {
   const [wsStatus, setWsStatus] = useState("connecting");
   const [peerStatus, setPeerStatus] = useState("idle");
   const [peerRole, setPeerRole] = useState("none");
@@ -29,6 +31,7 @@ export const useWebRTCConnection = (roomId: string) => {
 
   useEffect(() => {
     let isDisposed = false;
+    let hasSharedEntryMeta = false;
     const signaling = new SignalingClient(getSignalUrl(roomId));
     const peerManager = new PeerConnectionManager(signaling, { forceTurn: true });
     const fileReceiver = new FileReceiver();
@@ -118,11 +121,25 @@ export const useWebRTCConnection = (roomId: string) => {
       setStateIfActive(() => setErrorMessage(error.message));
     });
 
-    peerManager.on("datachannel-open", () => {
+    peerManager.on("datachannel-open", (channel) => {
       setStateIfActive(() => {
         setPeerStatus("connected");
         setDataChannelStatus("open");
       });
+
+      if (!hasSharedEntryMeta && channel.readyState === "open") {
+        hasSharedEntryMeta = true;
+        try {
+          channel.send(
+            JSON.stringify({
+              type: "receiver-join-meta",
+              joinMethod: entryMethod,
+            }),
+          );
+        } catch {
+          // 送信失敗時もファイル受信は継続
+        }
+      }
     });
 
     peerManager.on("datachannel-close", () => {
@@ -171,7 +188,7 @@ export const useWebRTCConnection = (roomId: string) => {
       signaling.disconnect();
       peerManager.cleanup();
     };
-  }, [roomId]);
+  }, [roomId, entryMethod]);
 
   return {
     wsStatus,

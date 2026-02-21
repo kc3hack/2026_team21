@@ -1,8 +1,9 @@
 import { css } from "hono/css";
+import { useRef, useState } from "hono/jsx";
 
 const containerStyles = css`
   background-color: #fff;
-  border: 6px solid #f6ad49; /* オレンジの太い縁 */
+  border: 6px solid #f6ad49;
   border-radius: 32px;
   padding: 2.5rem 1.5rem;
   display: flex;
@@ -63,61 +64,141 @@ const pinInputStyles = css`
   }
 `;
 
+const submitButtonStyles = css`
+  margin-top: 0.5rem;
+  background: #f6ad49;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 2rem;
+  font-weight: 900;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: transform 0.1s ease, opacity 0.2s ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+`;
+
+const errorStyles = css`
+  margin: 0;
+  color: #d85f39;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+`;
+
+const helperTextStyles = css`
+  margin: -0.2rem 0 0;
+  color: #5e7359;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.65;
+  text-align: center;
+  white-space: pre-line;
+`;
+
 const PIN_INPUT_KEYS = ["pin-1", "pin-2", "pin-3", "pin-4", "pin-5", "pin-6"] as const;
 
-type PinInputBlockProps = {
-  onSubmit: (shortCode: string) => Promise<void> | void;
+type Props = {
+  onSubmit: (pin: string) => Promise<void> | void;
+  isSubmitting?: boolean;
+  errorMessage?: string;
+  helperMessage?: string;
 };
 
-export const PinInputBlock = (props: PinInputBlockProps) => {
-  // 入力フォーカス移動のロジックを簡易的に実装
-  const handleInput = (e: InputEvent) => {
+export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "", helperMessage = "" }: Props) => {
+  const [digits, setDigits] = useState<string[]>(Array.from({ length: PIN_INPUT_KEYS.length }, () => ""));
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  const pin = digits.join("");
+  const canSubmit = pin.length === PIN_INPUT_KEYS.length && !isSubmitting;
+
+  const focusInput = (index: number): void => {
+    inputRefs.current?.[index]?.focus();
+  };
+
+  const updateDigit = (index: number, value: string): void => {
+    const next = [...digits];
+    next[index] = value;
+    setDigits(next);
+  };
+
+  const submitIfPossible = (): void => {
+    if (!canSubmit) {
+      return;
+    }
+    void Promise.resolve(onSubmit(pin));
+  };
+
+  const handleInput = (index: number, e: InputEvent): void => {
     const target = e.currentTarget;
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
 
-    target.value = target.value.replace(/\D/g, "").slice(0, 1);
+    const raw = target.value.replace(/\D/g, "");
+    if (!raw) {
+      updateDigit(index, "");
+      return;
+    }
 
-    const val = target.value;
-    const nextInput = target.nextElementSibling;
-    if (val && nextInput instanceof HTMLInputElement) {
-      nextInput.focus();
+    const value = raw.slice(-1);
+    updateDigit(index, value);
+
+    if (index < PIN_INPUT_KEYS.length - 1) {
+      focusInput(index + 1);
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = (index: number, e: KeyboardEvent): void => {
     const target = e.currentTarget;
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
 
-    const previousInput = target.previousElementSibling;
-    if (e.key === "Backspace" && !target.value && previousInput instanceof HTMLInputElement) {
-      previousInput.focus();
+    if (e.key === "Backspace" && !target.value && index > 0) {
+      focusInput(index - 1);
+      return;
+    }
+
+    if (e.key === "Enter") {
+      submitIfPossible();
     }
   };
 
-  const handleSubmit = async (e: Event) => {
+  const handlePaste = (e: ClipboardEvent): void => {
     e.preventDefault();
-    const form = e.currentTarget;
-    if (!(form instanceof HTMLFormElement)) {
+    const pasted = e.clipboardData?.getData("text") ?? "";
+    const onlyDigits = pasted.replace(/\D/g, "").slice(0, PIN_INPUT_KEYS.length);
+    if (!onlyDigits) {
       return;
     }
 
-    const shortCode = PIN_INPUT_KEYS.map((key) => {
-      const input = form.elements.namedItem(key);
-      return input instanceof HTMLInputElement ? input.value : "";
-    }).join("");
+    const next = Array.from({ length: PIN_INPUT_KEYS.length }, (_, index) => onlyDigits[index] ?? "");
+    setDigits(next);
 
-    await props.onSubmit(shortCode);
+    const focusIndex = Math.max(0, Math.min(onlyDigits.length - 1, PIN_INPUT_KEYS.length - 1));
+    focusInput(focusIndex);
+  };
+
+  const handleSubmit = (e: Event): void => {
+    e.preventDefault();
+    submitIfPossible();
   };
 
   return (
     <form action="" class={containerStyles} onSubmit={handleSubmit}>
       <p class={titleStyles}>6桁の番号を入力</p>
+
       <div class={pinContainerStyles}>
-        {PIN_INPUT_KEYS.map((key) => (
+        {PIN_INPUT_KEYS.map((key, index) => (
           <input
             key={key}
             name={key}
@@ -125,17 +206,26 @@ export const PinInputBlock = (props: PinInputBlockProps) => {
             inputMode="numeric"
             maxLength={1}
             class={pinInputStyles}
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
+            value={digits[index]}
+            onInput={(e) => handleInput(index, e)}
+            onKeyDown={(e) => handleKeyDown(index, e)}
+            onPaste={handlePaste}
+            ref={(element: HTMLInputElement | null) => {
+              if (!inputRefs.current) {
+                return;
+              }
+              inputRefs.current[index] = element;
+            }}
           />
         ))}
       </div>
-      <button
-        type="submit"
-        style="margin-top: 0.5rem; background: #f6ad49; color: white; border: none; padding: 0.8rem 2rem; border-radius: 2rem; font-weight: 900; cursor: pointer; font-size: 1.1rem;"
-      >
-        受信する
+
+      <button type="submit" class={submitButtonStyles} disabled={!canSubmit}>
+        {isSubmitting ? "確認中..." : "受信する"}
       </button>
+
+      {helperMessage && <p class={helperTextStyles}>{helperMessage}</p>}
+      {errorMessage && <p class={errorStyles}>{errorMessage}</p>}
     </form>
   );
 };

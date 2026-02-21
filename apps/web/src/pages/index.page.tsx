@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { css, Style } from "hono/css";
-import { useState } from "hono/jsx";
+import { useEffect, useState } from "hono/jsx";
 import { SlidingGhost } from "@/components/animations/SlidingGhost";
+import { TransferCompletePopup } from "@/components/animations/TransferCompletePopup";
+import { TransferHandoverScene } from "@/components/animations/TransferHandoverScene";
+import { TransferTruckProgress } from "@/components/animations/TransferTruckProgress";
 import { FileSelectArea } from "@/components/button/FileSelectArea";
 import { ReceiveButton } from "@/components/button/ReceiveButton";
 import { LogoIcon } from "@/components/Logo";
@@ -10,13 +13,29 @@ import { useQRCode } from "@/hooks/useQRCode";
 import { apiClient } from "@/pages/api/index.client";
 import { Page } from "@/pages/router";
 
+type SenderFlowStage = "idle" | "qr" | "transferring" | "handover" | "completed";
+
+const parseProgressPercent = (progressText: string): number => {
+  const match = progressText.match(/(\d+)\s*\/\s*(\d+)/);
+  if (!match) {
+    return 0;
+  }
+
+  const sent = Number(match[1]);
+  const total = Number(match[2]);
+  if (!Number.isFinite(sent) || !Number.isFinite(total) || total <= 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, (sent / total) * 100));
+};
+
 export const TopPageRoute = () => {
   const app = new Hono();
   app.get("/", (c) => c.render(<Page id="/" />));
   return app;
 };
 
-// 全体のレイアウト管理
 const responsiveWrapper = css`
   position: relative;
   overflow: hidden;
@@ -25,41 +44,233 @@ const responsiveWrapper = css`
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-bottom: 1.2rem;
 
-  /* グローバルな絶対配置指定をコンポーネント側の管理で上書き */
   & .logo-area {
     position: relative;
     top: 0;
   }
+
+  @media (max-width: 600px) {
+    min-height: 100dvh;
+    padding: 0 0.8rem calc(6.8rem + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
 `;
 
-/**
- * 送信するボタンを押すとルームを作成し、接続を開始する。
- * 受信側が入室して DataChannel が open になったら、選択済みファイルを自動送信する。
- *
- * UIは animation-test の見た目を踏襲しつつ、ロジックは useFileSenderConnection に統合。
- */
+const topSectionClass = css`
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 120;
+`;
+
+const centerSectionClass = css`
+  z-index: 100;
+  text-align: center;
+  width: 100%;
+  max-width: 34rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  margin: 1rem 0;
+  box-sizing: border-box;
+
+  @media (max-width: 600px) {
+    max-width: 22rem;
+    padding: 0 0.4rem;
+    margin: 0.6rem 0;
+  }
+`;
+
+const spacerClass = css`
+  flex: 1;
+  width: 100%;
+
+  @media (max-width: 600px) {
+    min-height: 5.5rem;
+  }
+`;
+
+const stageTextClass = css`
+  margin: 1rem 0 0;
+  color: #5e7359;
+  font-size: 1.08rem;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1.55;
+
+  @media (max-width: 600px) {
+    margin-top: 0.7rem;
+    font-size: 0.94rem;
+    line-height: 1.45;
+  }
+`;
+
+const errorTextClass = css`
+  margin: 1rem 0 0;
+  color: #d85f39;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-align: center;
+
+  @media (max-width: 600px) {
+    margin-top: 0.7rem;
+    font-size: 0.86rem;
+  }
+`;
+
+const qrModalClass = css`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  background: white;
+  padding: 1.8rem 1.6rem;
+  border: 6px solid #333;
+  border-radius: 24px;
+  width: min(90vw, 26rem);
+  text-align: center;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+
+  .qr-title {
+    margin: 0;
+    color: #f6ad49;
+    font-size: 1.3rem;
+    font-weight: 900;
+  }
+
+  .qr-help {
+    margin: 0.9rem 0 0.7rem;
+    color: #5e7359;
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .shortcode {
+    margin: 0.85rem auto 0;
+    width: fit-content;
+    min-width: 9rem;
+    padding: 0.45rem 1.1rem;
+    border-radius: 9999px;
+    background: #fff7e5;
+    border: 3px solid #f6ad49;
+    font-size: 1.55rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: #5e7359;
+  }
+
+  .close-btn {
+    margin-top: 1rem;
+    border: none;
+    border-radius: 9999px;
+    background: #758e6f;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 900;
+    padding: 0.55rem 1.4rem;
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    width: min(92vw, 20rem);
+    padding: 1.2rem 1rem;
+    border-width: 5px;
+    border-radius: 18px;
+
+    .qr-title {
+      font-size: 1.08rem;
+    }
+
+    .qr-help {
+      font-size: 0.84rem;
+      margin: 0.65rem 0 0.55rem;
+      line-height: 1.45;
+    }
+
+    .shortcode {
+      font-size: 1.28rem;
+      min-width: 7.4rem;
+      padding: 0.35rem 0.9rem;
+      margin-top: 0.65rem;
+    }
+  }
+`;
+
 export const TopPage = () => {
   const {
     isOpen,
     url,
-    wsStatus,
-    peerStatus,
-    peerRole,
     dataChannelStatus,
     sendProgress,
     lastSentFile,
     errorMessage,
     fileInputRef,
     shortcode,
-    toggleOpen,
+    receiverJoinMethod,
+    closeModal,
     handleCreateRoom,
-    // 必要ならデバッグ表示用に取り出して使える
-    // roomId, wsStatus, peerStatus, peerRole, dataChannelStatus, sendProgress, lastSentFile, errorMessage,
   } = useFileSenderConnection();
-
-  const [isMoving, setIsMoving] = useState(false); // お化けの左スライドアウト状態
   const { ref: qrCodeRef } = useQRCode(url);
+
+  const [flowStage, setFlowStage] = useState<SenderFlowStage>("idle");
+  const [isNavigatingToReceive, setIsNavigatingToReceive] = useState(false);
+  const [isEnteringFromRight, setIsEnteringFromRight] = useState(false);
+  const [isEnteringFromLeft, setIsEnteringFromLeft] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get("from");
+    if (!from) {
+      return;
+    }
+
+    if (from === "complete") {
+      setIsEnteringFromRight(true);
+    } else if (from === "receive-back") {
+      setIsEnteringFromLeft(true);
+    } else {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setIsEnteringFromRight(false);
+      setIsEnteringFromLeft(false);
+    }, 1300);
+
+    params.delete("from");
+    const nextSearch = params.toString();
+    const nextUrl = nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname;
+    window.history.replaceState({}, "", nextUrl);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (flowStage === "qr" && dataChannelStatus === "open") {
+      closeModal();
+      setFlowStage("transferring");
+    }
+  }, [dataChannelStatus, flowStage]);
+
+  useEffect(() => {
+    if (flowStage !== "transferring" || !lastSentFile) {
+      return;
+    }
+
+    setFlowStage("handover");
+    const timer = setTimeout(() => {
+      setFlowStage("completed");
+    }, 3900);
+
+    return () => clearTimeout(timer);
+  }, [flowStage, lastSentFile]);
 
   const findRoomIdByShortCode = async (shortcode: string) => {
     const validate = await apiClient.rooms[":shortcode"].$get({ param: { shortcode } });
@@ -76,67 +287,69 @@ export const TopPage = () => {
     fileInputRef.current?.click();
   };
 
-  // ファイル選択時（= onChange）: アニメーション開始 → ルーム作成/送信開始
   const onFileSelected = () => {
+    if (!fileInputRef.current?.files?.[0]) {
+      return;
+    }
+
     void (async () => {
-      setIsMoving(true);
-      await handleCreateRoom();
-      // ここでモーダル表示タイミングを“アニメに合わせたい”なら遅延させる
-      // ※ useFileSenderConnection 側がすでに isOpen を開く設計なら、この遅延は不要
-      // setTimeout(() => toggleOpen(), 1500);
-    })().catch((e) => {
-      console.error(e);
-      setIsMoving(false);
-    });
+      setFlowStage("qr");
+      const created = await handleCreateRoom();
+      if (!created) {
+        setFlowStage("idle");
+      }
+    })();
   };
 
-  // 受信ボタンクリック時：左へスライドアウトしてから遷移
   const handleReceiveClick = () => {
-    setIsMoving(true);
+    setIsNavigatingToReceive(true);
     setTimeout(() => {
       window.location.href = "/r";
-    }, 1500);
+    }, 1400);
   };
 
-  // QRモーダルを閉じる（閉じたらアニメも戻す）
-  const closeModal = () => {
-    toggleOpen();
-    setIsMoving(false);
+  const handleCloseQrModal = () => {
+    closeModal();
+    setFlowStage("idle");
   };
+
+  const handleCompleteOk = () => {
+    window.location.href = "/?from=complete";
+  };
+
+  const sendProgressPercent = lastSentFile ? 100 : parseProgressPercent(sendProgress);
+  const showSenderGhost = flowStage !== "handover" && flowStage !== "completed";
+  const showTruck = flowStage === "transferring" || flowStage === "handover";
+  const ghostIsSleeping = flowStage === "qr";
+  const ghostIsMoving = flowStage === "transferring" || isNavigatingToReceive;
+  const showGhostNotes = flowStage === "idle" && !isNavigatingToReceive;
+  const stageText =
+    flowStage === "transferring"
+      ? "ファイル転送中..."
+      : flowStage === "handover" || flowStage === "completed"
+        ? "転送完了の演出中..."
+        : flowStage === "qr"
+          ? "相手にQRコードまたは6桁番号を共有してください"
+          : "";
 
   return (
     <div class={responsiveWrapper}>
       <Style />
 
-      {/* 1. 上部エリア：ロゴ */}
-      <div
-        style="
-          flex: 1;
-          width: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          z-index: 120;
-        "
-      >
+      <div class={topSectionClass}>
         <LogoIcon />
       </div>
 
-      {/* 2. 中央エリア：メインボタン群 */}
-      <div
-        style="
-          z-index: 100;
-          text-align: center;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 0 20px;
-          margin: 1rem 0;
-        "
-      >
-        <FileSelectArea onSelect={handleClickSelect} />
-        <ReceiveButton onClick={handleReceiveClick} />
+      <div class={centerSectionClass}>
+        {flowStage === "idle" && !isNavigatingToReceive && (
+          <>
+            <FileSelectArea onSelect={handleClickSelect} />
+            <ReceiveButton onClick={handleReceiveClick} />
+          </>
+        )}
+
+        {stageText && <p class={stageTextClass}>{stageText}</p>}
+        {errorMessage && <p class={errorTextClass}>{errorMessage}</p>}
 
         <input
           ref={fileInputRef}
@@ -148,31 +361,48 @@ export const TopPage = () => {
         />
       </div>
 
-      {/* 3. 下部エリア：スペーサー（中央配置を維持） */}
-      <div style="flex: 1; width: 100%;"></div>
+      <div class={spacerClass} />
 
-      {/* 緑のお化けアニメーション（isMoving で左へスライドアウト） */}
-      <SlidingGhost isMoving={isMoving} />
+      {showSenderGhost && (
+        <SlidingGhost
+          isMoving={ghostIsMoving}
+          isSleeping={ghostIsSleeping}
+          showNotes={showGhostNotes}
+          enteringFromRight={isEnteringFromRight}
+          enteringFromLeft={isEnteringFromLeft}
+        />
+      )}
 
-      {/* QRコード表示モーダル（hookの isOpen/url を利用） */}
-      {isOpen && (
-        <div
-          style="
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10000;
-            background: white;
-            padding: 2rem;
-            border: 6px solid #333;
-            border-radius: 24px;
-          "
-        >
-          <h2 style="font-weight: 900; margin-bottom: 1rem;">QRコード</h2>
-          <div ref={qrCodeRef} />
-          <div>Shortcode: {shortcode}</div>
-          <button type="button" onClick={toggleOpen}>
+      {showTruck && (
+        <TransferTruckProgress
+          progressPercent={flowStage === "handover" ? 100 : sendProgressPercent}
+          active={flowStage === "transferring"}
+          exiting={flowStage === "handover"}
+          showProgressBar={flowStage === "transferring"}
+        />
+      )}
+
+      <TransferHandoverScene active={flowStage === "handover" || flowStage === "completed"} />
+
+      <TransferCompletePopup
+        open={flowStage === "completed"}
+        title="転送が完了しました。"
+        message="ファイルの送信が正常に完了しました。"
+        showInviteText={receiverJoinMethod === "qr"}
+        onOk={handleCompleteOk}
+      />
+
+      {isOpen && flowStage === "qr" && (
+        <div class={qrModalClass}>
+          <h2 class="qr-title">QRコード</h2>
+          <p class="qr-help">
+            読み取りに失敗した場合は、
+            <br />
+            下の6桁番号を相手に入力してもらってください
+          </p>
+          <div ref={qrCodeRef} style="display: flex; justify-content: center;" />
+          <div class="shortcode">{shortcode}</div>
+          <button type="button" class="close-btn" onClick={handleCloseQrModal}>
             閉じる
           </button>
         </div>

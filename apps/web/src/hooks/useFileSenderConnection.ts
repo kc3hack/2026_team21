@@ -5,6 +5,8 @@ import { PeerConnectionManager } from "@/lib/realtime/peer-connection";
 import { SignalingClient } from "@/lib/realtime/signaling-client";
 import { apiClient } from "@/pages/api/index.client";
 
+export type ReceiverJoinMethod = "unknown" | "qr" | "code";
+
 /**
  * 送信側のルーム作成と WebRTC 接続状態を管理する。
  */
@@ -20,6 +22,7 @@ export const useFileSenderConnection = () => {
   const [lastSentFile, setLastSentFile] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [shortcode, setShortcode] = useState("");
+  const [receiverJoinMethod, setReceiverJoinMethod] = useState<ReceiverJoinMethod>("unknown");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -53,6 +56,7 @@ export const useFileSenderConnection = () => {
     resetPeerState();
     setErrorMessage("");
     setLastSentFile("");
+    setReceiverJoinMethod("unknown");
 
     signaling.on("connected", () => {
       setStateIfActive(() => setWsStatus("connected"));
@@ -146,6 +150,22 @@ export const useFileSenderConnection = () => {
       });
     });
 
+    peerManager.on("datachannel-message", (data) => {
+      if (typeof data !== "string") {
+        return;
+      }
+
+      try {
+        const payload = JSON.parse(data) as { type?: unknown; joinMethod?: unknown };
+        const joinMethod = payload.joinMethod;
+        if (payload.type === "receiver-join-meta" && (joinMethod === "qr" || joinMethod === "code")) {
+          setStateIfActive(() => setReceiverJoinMethod(joinMethod));
+        }
+      } catch {
+        // 送信ファイルのメッセージ以外は無視する
+      }
+    });
+
     peerManager.on("disconnected", () => {
       setStateIfActive(() => {
         resetPeerState();
@@ -186,14 +206,18 @@ export const useFileSenderConnection = () => {
     setIsOpen((prev) => !prev);
   };
 
-  const handleCreateRoom = () => {
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
+  const handleCreateRoom = async (): Promise<boolean> => {
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
       setErrorMessage("送信するファイルを選択してください");
-      return;
+      return false;
     }
 
-    void (async () => {
+    try {
       // 部屋番号を生成する
       const response = await apiClient.rooms.$post();
       if (!response.ok) {
@@ -205,19 +229,22 @@ export const useFileSenderConnection = () => {
       }
 
       // URL を作る
-      const uri = `${location.origin}/r/${encodeURIComponent(payload.id)}`;
+      const uri = `${location.origin}/r/${encodeURIComponent(payload.id)}?source=qr`;
 
       setRoomId(payload.id);
       setShortcode(payload.shortcode);
       setErrorMessage("");
+      setReceiverJoinMethod("unknown");
 
       // モーダルを開く
       setUrl(uri);
       setIsOpen(true);
-    })().catch((error) => {
+      return true;
+    } catch (error) {
       console.error(error);
       setErrorMessage(String(error));
-    });
+      return false;
+    }
   };
 
   return {
@@ -233,7 +260,9 @@ export const useFileSenderConnection = () => {
     errorMessage,
     fileInputRef,
     shortcode,
+    receiverJoinMethod,
     toggleOpen,
+    closeModal,
     handleCreateRoom,
   };
 };
