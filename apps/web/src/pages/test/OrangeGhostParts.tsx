@@ -1,22 +1,19 @@
-// オレンジキャラのパーツ構成
+// apps/web/src/pages/test/OrangeGhostParts.tsx
 
 export const OrangeGhostParts = () => {
   return (
     <>
-      {/* 体はオレンジ専用 */}
       <img src="/images/correct/body2.svg" alt="body" class="ghost-part" />
-      {/* 頭（顔の輪郭）は緑と共通 */}
       <img src="/images/home/head.svg" alt="head" class="ghost-part" />
 
-      {/* 目は緑と共通 */}
-      <img src="/images/home/right_eye.svg" class="ghost-part eye-right" alt="" />
-      <img src="/images/home/left_eye.svg" class="ghost-part eye-left" alt="" />
+      {/* IDを追加: EyeTracker用 */}
+      <img id="ghost-eye-right" src="/images/home/right_eye.svg" class="ghost-part eye-right ghost-eye" alt="" />
+      <img id="ghost-eye-left" src="/images/home/left_eye.svg" class="ghost-part eye-left ghost-eye" alt="" />
 
-      {/* 腕はオレンジ専用 */}
-      <img id="orange-arm-right" src="/images/correct/right2.svg" class="ghost-part arm-right" alt="" />
-      <img id="orange-arm-left" src="/images/correct/left2.svg" class="ghost-part arm-left" alt="" />
+      {/* IDを変更: InteractionController用 (緑と共通のIDにする) */}
+      <img id="ghost-arm-right" src="/images/correct/right2.svg" class="ghost-part arm-right" alt="" />
+      <img id="ghost-arm-left" src="/images/correct/left2.svg" class="ghost-part arm-left" alt="" />
 
-      {/* 喜ぶ時のチーク */}
       <div class="cheek cheek-left" />
       <div class="cheek cheek-right" />
     </>

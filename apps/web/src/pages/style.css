@@ -131,15 +131,14 @@ body {
 }
 
 .logo-area {
-  position: absolute;
-  top: 4rem;
+  top: 0rem;
 }
 .logo-img {
   width: auto;
   max-width: none;
-  height: 9rem;
+  height: 0rem;
   object-fit: contain;
-  transform: scale(0.9);
+  transform: scale(0.8);
 }
 
 .ghost-area {
