@@ -93,6 +93,7 @@ describe("PeerConnectionManager", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
