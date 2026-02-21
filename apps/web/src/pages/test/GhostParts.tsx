@@ -12,7 +12,12 @@ export const GhostParts = () => {
       <div class="cheek cheek-left" />
       <div class="cheek cheek-right" />
 
-      <img id="ghost-eye-right" src="/images/home/right_eye.svg" alt="right_eye" class="ghost-part ghost-eye eye-right" />
+      <img
+        id="ghost-eye-right"
+        src="/images/home/right_eye.svg"
+        alt="right_eye"
+        class="ghost-part ghost-eye eye-right"
+      />
       <img id="ghost-eye-left" src="/images/home/left_eye.svg" alt="left_eye" class="ghost-part ghost-eye eye-left" />
     </>
   );
