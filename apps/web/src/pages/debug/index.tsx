@@ -4,18 +4,9 @@ import { Script } from "vite-ssr-components/hono";
 const app = new Hono();
 
 app.get("/realtime", (c) => {
-  const bindings = c.env as Record<string, unknown>;
-  const turnUsername = typeof bindings.CF_TURN_USERNAME === "string" ? bindings.CF_TURN_USERNAME : "";
-  const turnCredential = typeof bindings.CF_TURN_TOKEN === "string" ? bindings.CF_TURN_TOKEN : "";
-
   return c.render(
     <div>
-      <section
-        id="realtime-debug-page"
-        class="realtime-debug-page"
-        data-turn-username={turnUsername}
-        data-turn-credential={turnCredential}
-      >
+      <section id="realtime-debug-page" class="realtime-debug-page">
         <h1>Realtime + File Transfer Debug</h1>
         <p>同じ roomId で 2 タブ接続すると、自動で WebRTC 接続しファイル送受信を試せます。</p>
         <ol class="realtime-debug-steps">
@@ -30,6 +21,10 @@ app.get("/realtime", (c) => {
               roomId
             </label>
             <input id="room-id" class="realtime-debug-input" value="debug-room" />
+            <label class="realtime-debug-check" htmlFor="force-turn">
+              <input id="force-turn" type="checkbox" />
+              TURN 強制（初回接続から relay のみ）
+            </label>
             <div class="realtime-debug-actions">
               <button type="button" id="connect-btn">
                 Connect
@@ -111,6 +106,18 @@ app.get("/realtime", (c) => {
           display: flex;
           gap: 0.5rem;
           margin: 0.75rem 0;
+        }
+        .realtime-debug-check {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          margin-top: 0.7rem;
+          font-size: 0.92rem;
+          user-select: none;
+        }
+        .realtime-debug-check input {
+          width: 1rem;
+          height: 1rem;
         }
         .realtime-debug-label {
           display: block;

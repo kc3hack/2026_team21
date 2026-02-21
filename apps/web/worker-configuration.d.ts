@@ -7,7 +7,7 @@ declare namespace Cloudflare {
 		durableNamespaces: "DoorMan";
 	}
 	interface Env {
-		CF_TURN_USERNAME: string;
+		CF_TURN_KEY_ID: string;
 		CF_TURN_TOKEN: string;
 		DOORMAN: DurableObjectNamespace<import("./src/index").DoorMan>;
 	}

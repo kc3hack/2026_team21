@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PeerConnectionManager } from "@/lib/realtime/peer-connection";
+import { PeerConnectionManager, type TurnIceServerConfig } from "@/lib/realtime/peer-connection";
 import type { SignalingClient } from "@/lib/realtime/signaling-client";
 
 /* ── Mock RTCDataChannel ── */
@@ -18,11 +18,33 @@ function createMockDataChannel(label = "file-transfer"): RTCDataChannel {
   } as unknown as RTCDataChannel;
 }
 
-function createMockEnv(): Cloudflare.Env {
+function createMockTurnIceServer(): TurnIceServerConfig {
   return {
-    CF_TURN_USERNAME: "test-user",
-    CF_TURN_TOKEN: "test-token",
-  } as unknown as Cloudflare.Env;
+    urls: [
+      "turn:turn.cloudflare.com:3478?transport=udp",
+      "turn:turn.cloudflare.com:3478?transport=tcp",
+      "turns:turn.cloudflare.com:5349?transport=tcp",
+    ],
+    username: "test-user",
+    credential: "test-token",
+  };
+}
+
+function createExpectedTurnRtcConfig(): RTCConfiguration {
+  return {
+    iceServers: [
+      {
+        urls: [
+          "turn:turn.cloudflare.com:3478?transport=udp",
+          "turn:turn.cloudflare.com:3478?transport=tcp",
+          "turns:turn.cloudflare.com:5349?transport=tcp",
+        ],
+        username: "test-user",
+        credential: "test-token",
+      },
+    ],
+    iceTransportPolicy: "relay",
+  };
 }
 
 /* ── Mock RTCPeerConnection (class 形式) ── */
@@ -135,7 +157,7 @@ describe("PeerConnectionManager", () => {
   describe("コンストラクタ", () => {
     it("シグナリングハンドラを登録する", () => {
       const signaling = createMockSignaling();
-      new PeerConnectionManager(signaling, createMockEnv());
+      new PeerConnectionManager(signaling);
 
       expect(signaling.on).toHaveBeenCalledWith("offer", expect.any(Function));
       expect(signaling.on).toHaveBeenCalledWith("answer", expect.any(Function));
@@ -148,7 +170,7 @@ describe("PeerConnectionManager", () => {
   describe("createOffer", () => {
     it("PeerConnection を作成し、DataChannel を生成し、offer を送信する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
 
       await manager.createOffer();
       const pc = latestMockPc;
@@ -164,7 +186,7 @@ describe("PeerConnectionManager", () => {
 
     it("最初の接続は STUN のみで開始する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
 
       await manager.createOffer();
 
@@ -173,9 +195,21 @@ describe("PeerConnectionManager", () => {
       });
     });
 
+    it("forceTurn=true の時は最初の接続から TURN を使う", async () => {
+      const signaling = createMockSignaling();
+      const manager = new PeerConnectionManager(signaling, {
+        turnIceServer: createMockTurnIceServer(),
+        forceTurn: true,
+      });
+
+      await manager.createOffer();
+
+      expect(createdPeerConnectionConfigs[0]).toEqual(createExpectedTurnRtcConfig());
+    });
+
     it("既存の PeerConnection がある場合はクリーンアップしてから作り直す", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
 
       await manager.createOffer();
       const firstPc = latestMockPc;
@@ -194,7 +228,7 @@ describe("PeerConnectionManager", () => {
       vi.stubGlobal("RTCPeerConnection", FailingOfferRTCPeerConnection);
 
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
 
       await expect(manager.createOffer()).rejects.toThrow("setLocalDescription failed");
       const failedPc = latestMockPc;
@@ -206,7 +240,7 @@ describe("PeerConnectionManager", () => {
   describe("handleOffer (via signaling)", () => {
     it("offer 受信時に answer を返す", async () => {
       const signaling = createMockSignaling();
-      new PeerConnectionManager(signaling, createMockEnv());
+      new PeerConnectionManager(signaling);
 
       await signaling._trigger("offer", "remote-offer-sdp");
       const pc = latestMockPc;
@@ -233,7 +267,7 @@ describe("PeerConnectionManager", () => {
 
       const signaling = createMockSignaling();
       const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-      new PeerConnectionManager(signaling, createMockEnv());
+      new PeerConnectionManager(signaling);
 
       await signaling._trigger("offer", "broken-offer");
 
@@ -241,12 +275,24 @@ describe("PeerConnectionManager", () => {
       expect(pc.close).toHaveBeenCalled();
       expect(consoleError).toHaveBeenCalled();
     });
+
+    it("forceTurn=true の時は answerer 側も TURN を使う", async () => {
+      const signaling = createMockSignaling();
+      new PeerConnectionManager(signaling, {
+        turnIceServer: createMockTurnIceServer(),
+        forceTurn: true,
+      });
+
+      await signaling._trigger("offer", "remote-offer-sdp");
+
+      expect(createdPeerConnectionConfigs[0]).toEqual(createExpectedTurnRtcConfig());
+    });
   });
 
   describe("handleAnswer (via signaling)", () => {
     it("answer 受信時に remoteDescription をセットする", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       await manager.createOffer();
       const pc = latestMockPc;
 
@@ -260,7 +306,7 @@ describe("PeerConnectionManager", () => {
 
     it("PeerConnection がない場合は何もしない", async () => {
       const signaling = createMockSignaling();
-      new PeerConnectionManager(signaling, createMockEnv());
+      new PeerConnectionManager(signaling);
 
       // pc が null のまま answer を受信 → エラーにならないこと
       await signaling._trigger("answer", "sdp");
@@ -268,7 +314,7 @@ describe("PeerConnectionManager", () => {
 
     it("have-local-offer 以外の状態で受信した answer は無視する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       await manager.createOffer();
       const pc = latestMockPc;
       pc.signalingState = "stable";
@@ -283,7 +329,7 @@ describe("PeerConnectionManager", () => {
 
     it("answer 処理中に先着した candidate をキューして後で適用する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       await manager.createOffer();
       const pc = latestMockPc;
       const deferred = createDeferred<void>();
@@ -313,7 +359,7 @@ describe("PeerConnectionManager", () => {
   describe("handleCandidate (via signaling)", () => {
     it("remoteDescription 設定後に candidate を受信すると addIceCandidate を呼ぶ", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       await manager.createOffer();
       const pc = latestMockPc;
       await signaling._trigger("answer", "remote-answer-sdp");
@@ -329,7 +375,7 @@ describe("PeerConnectionManager", () => {
 
     it("PeerConnection がない場合は何もしない", async () => {
       const signaling = createMockSignaling();
-      new PeerConnectionManager(signaling, createMockEnv());
+      new PeerConnectionManager(signaling);
 
       await signaling._trigger("candidate", { candidate: "test" });
     });
@@ -338,7 +384,7 @@ describe("PeerConnectionManager", () => {
   describe("peer-left", () => {
     it("peer-left 受信時にクリーンアップして disconnected を発火する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       const onDisconnected = vi.fn();
       manager.on("disconnected", onDisconnected);
 
@@ -355,7 +401,7 @@ describe("PeerConnectionManager", () => {
   describe("signaling disconnected", () => {
     it("disconnected 受信時にクリーンアップして disconnected を発火する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       const onDisconnected = vi.fn();
       manager.on("disconnected", onDisconnected);
 
@@ -372,7 +418,7 @@ describe("PeerConnectionManager", () => {
   describe("DataChannel イベント", () => {
     it("ondatachannel で受信した channel の open イベントを伝播する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       const onOpen = vi.fn();
       manager.on("datachannel-open", onOpen);
 
@@ -390,7 +436,7 @@ describe("PeerConnectionManager", () => {
 
     it("datachannel-message イベントを伝播する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       const onMessage = vi.fn();
       manager.on("datachannel-message", onMessage);
 
@@ -408,7 +454,7 @@ describe("PeerConnectionManager", () => {
 
     it("datachannel-close イベントを伝播する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       const onClose = vi.fn();
       manager.on("datachannel-close", onClose);
 
@@ -428,7 +474,7 @@ describe("PeerConnectionManager", () => {
   describe("ICE candidate 送信", () => {
     it("onicecandidate で candidate をシグナリングに送信する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       await manager.createOffer();
       const pc = latestMockPc;
 
@@ -448,7 +494,7 @@ describe("PeerConnectionManager", () => {
 
     it("candidate が null の場合は送信しない", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       await manager.createOffer();
       const pc = latestMockPc;
 
@@ -465,7 +511,7 @@ describe("PeerConnectionManager", () => {
   describe("connectionState 変化", () => {
     it("disconnected 状態になると disconnected イベントを発火する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       const onDisconnected = vi.fn();
       manager.on("disconnected", onDisconnected);
 
@@ -480,7 +526,9 @@ describe("PeerConnectionManager", () => {
 
     it("failed 状態になったら TURN で再オファーする", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling, {
+        turnIceServer: createMockTurnIceServer(),
+      });
       const onDisconnected = vi.fn();
       manager.on("disconnected", onDisconnected);
 
@@ -492,31 +540,14 @@ describe("PeerConnectionManager", () => {
 
       expect(onDisconnected).not.toHaveBeenCalled();
       expect(firstPc.close).toHaveBeenCalled();
-      expect(createdPeerConnectionConfigs[1]).toEqual({
-        iceServers: [
-          {
-            urls: "turn:turn.cloudflare.com:3478?transport=udp",
-            username: "test-user",
-            credential: "test-token",
-          },
-          {
-            urls: "turn:turn.cloudflare.com:3478?transport=tcp",
-            username: "test-user",
-            credential: "test-token",
-          },
-          {
-            urls: "turns:turn.cloudflare.com:5349?transport=tcp",
-            username: "test-user",
-            credential: "test-token",
-          },
-        ],
-        iceTransportPolicy: "relay",
-      });
+      expect(createdPeerConnectionConfigs[1]).toEqual(createExpectedTurnRtcConfig());
     });
 
     it("TURN 再試行後に failed 状態なら disconnected イベントを発火する", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling, {
+        turnIceServer: createMockTurnIceServer(),
+      });
       const onDisconnected = vi.fn();
       manager.on("disconnected", onDisconnected);
 
@@ -538,7 +569,7 @@ describe("PeerConnectionManager", () => {
   describe("cleanup", () => {
     it("DataChannel と PeerConnection を閉じる", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       await manager.createOffer();
       const pc = latestMockPc;
 
@@ -554,7 +585,7 @@ describe("PeerConnectionManager", () => {
   describe("on / off", () => {
     it("off() でリスナーを解除できる", async () => {
       const signaling = createMockSignaling();
-      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const manager = new PeerConnectionManager(signaling);
       const cb = vi.fn();
       manager.on("disconnected", cb);
       manager.off("disconnected", cb);

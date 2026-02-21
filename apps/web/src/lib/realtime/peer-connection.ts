@@ -4,30 +4,29 @@ type IceTransportMode = "stun" | "turn";
 
 const STUN_SERVER: RTCIceServer = { urls: "stun:stun.cloudflare.com:3478" };
 
-const getTurnIceServers = (env: Cloudflare.Env): RTCIceServer[] => [
-  {
-    urls: "turn:turn.cloudflare.com:3478?transport=udp",
-    username: env.CF_TURN_USERNAME,
-    credential: env.CF_TURN_TOKEN,
-  },
-  {
-    urls: "turn:turn.cloudflare.com:3478?transport=tcp",
-    username: env.CF_TURN_USERNAME,
-    credential: env.CF_TURN_TOKEN,
-  },
-  {
-    urls: "turns:turn.cloudflare.com:5349?transport=tcp",
-    username: env.CF_TURN_USERNAME,
-    credential: env.CF_TURN_TOKEN,
-  },
-];
+export type TurnIceServerConfig = {
+  urls: string | string[];
+  username: string;
+  credential: string;
+};
 
-const getRTCConfig = (env: Cloudflare.Env, mode: IceTransportMode): RTCConfiguration => {
-  if (mode === "stun") {
+export type PeerConnectionManagerOptions = {
+  turnIceServer?: TurnIceServerConfig | null;
+  forceTurn?: boolean;
+};
+
+const normalizeTurnIceServer = (turnIceServer: TurnIceServerConfig): RTCIceServer => ({
+  urls: Array.isArray(turnIceServer.urls) ? [...turnIceServer.urls] : turnIceServer.urls,
+  username: turnIceServer.username,
+  credential: turnIceServer.credential,
+});
+
+const getRTCConfig = (mode: IceTransportMode, turnIceServer: RTCIceServer | null): RTCConfiguration => {
+  if (mode === "stun" || !turnIceServer) {
     return { iceServers: [STUN_SERVER] };
   }
   return {
-    iceServers: getTurnIceServers(env),
+    iceServers: [turnIceServer],
     iceTransportPolicy: "relay",
   };
 };
@@ -48,20 +47,27 @@ export class PeerConnectionManager {
   private listeners = new Map<keyof PeerEventMap, Set<(...args: never[]) => void>>();
   private makingOffer = false;
   private pendingRemoteCandidates: RTCIceCandidateInit[] = [];
-  private readonly rtcConfigByMode: Record<IceTransportMode, RTCConfiguration>;
+  private turnIceServer: RTCIceServer | null = null;
+  private forceTurn = false;
   private currentIceTransportMode: IceTransportMode = "stun";
   private hasTurnRetryAttempted = false;
   private isOfferer = false;
 
   constructor(
     private readonly signaling: SignalingClient,
-    env: CloudflareBindings,
+    options: PeerConnectionManagerOptions = {},
   ) {
-    this.rtcConfigByMode = {
-      stun: getRTCConfig(env, "stun"),
-      turn: getRTCConfig(env, "turn"),
-    };
+    this.setTurnIceServer(options.turnIceServer ?? null);
+    this.setForceTurn(options.forceTurn ?? false);
     this.setupSignalingHandlers();
+  }
+
+  setTurnIceServer(turnIceServer: TurnIceServerConfig | null): void {
+    this.turnIceServer = turnIceServer ? normalizeTurnIceServer(turnIceServer) : null;
+  }
+
+  setForceTurn(forceTurn: boolean): void {
+    this.forceTurn = forceTurn;
   }
 
   private setupSignalingHandlers(): void {
@@ -96,7 +102,7 @@ export class PeerConnectionManager {
 
   /** ピアが参加した時にオファーを作成する（最初に接続した側が呼ぶ） */
   async createOffer(): Promise<void> {
-    this.currentIceTransportMode = "stun";
+    this.currentIceTransportMode = this.getInitialIceTransportMode();
     this.hasTurnRetryAttempted = false;
     this.isOfferer = true;
     await this.createOfferWithCurrentTransport();
@@ -137,7 +143,7 @@ export class PeerConnectionManager {
 
   private async handleOffer(sdp: string): Promise<void> {
     this.isOfferer = false;
-    this.currentIceTransportMode = "stun";
+    this.currentIceTransportMode = this.getInitialIceTransportMode();
     this.hasTurnRetryAttempted = false;
     // 既存の接続がある場合はクリーンアップしてからリソースリークを防ぐ
     if (this.pc) {
@@ -158,6 +164,13 @@ export class PeerConnectionManager {
       this.cleanup();
       throw error;
     }
+  }
+
+  private getInitialIceTransportMode(): IceTransportMode {
+    if (this.forceTurn && this.turnIceServer) {
+      return "turn";
+    }
+    return "stun";
   }
 
   private async handleAnswer(sdp: string): Promise<void> {
@@ -202,7 +215,13 @@ export class PeerConnectionManager {
   }
 
   private shouldRetryWithTurn(pc: RTCPeerConnection): boolean {
-    return this.pc === pc && this.isOfferer && this.currentIceTransportMode === "stun" && !this.hasTurnRetryAttempted;
+    return (
+      this.pc === pc &&
+      this.isOfferer &&
+      this.currentIceTransportMode === "stun" &&
+      !this.hasTurnRetryAttempted &&
+      this.turnIceServer !== null
+    );
   }
 
   private async retryOfferWithTurn(): Promise<void> {
@@ -218,7 +237,7 @@ export class PeerConnectionManager {
   }
 
   private createPeerConnection(mode: IceTransportMode): RTCPeerConnection {
-    const pc = new RTCPeerConnection(this.rtcConfigByMode[mode]);
+    const pc = new RTCPeerConnection(getRTCConfig(mode, this.turnIceServer));
 
     pc.onicecandidate = (event) => {
       if (this.pc !== pc) return;
