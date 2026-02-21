@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PeerConnectionManager } from "@/lib/realtime/peer-connection";
 import type { SignalingClient } from "@/lib/realtime/signaling-client";
 

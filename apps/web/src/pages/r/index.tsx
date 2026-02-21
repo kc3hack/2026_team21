@@ -9,7 +9,6 @@ app.post("/:roomId", async (c) => {
   const backTo = formData.get("back_to");
 
   // do something
-  // biome-ignore lint/suspicious/noConsole: for debugging
   console.log(file);
 
   return c.redirect(backTo?.toString() || c.req.path || "/");

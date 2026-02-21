@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SignalingClient } from "@/lib/realtime/signaling-client";
 import type { ServerMessage } from "@/lib/realtime/types";
 
@@ -23,7 +23,7 @@ class MockWebSocket {
     if (!this.eventListeners.has(type)) {
       this.eventListeners.set(type, new Set());
     }
-    this.eventListeners.get(type)!.add(listener);
+    this.eventListeners.get(type)?.add(listener);
   }
 
   removeEventListener(type: string, listener: (ev: unknown) => void) {

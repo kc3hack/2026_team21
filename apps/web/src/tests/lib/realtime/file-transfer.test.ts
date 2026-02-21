@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { sendFile, FileReceiver } from "@/lib/realtime/file-transfer";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { FileReceiver, sendFile } from "@/lib/realtime/file-transfer";
 import type { FileTransferMessage } from "@/lib/realtime/types";
 
 /* ── Mock RTCDataChannel ── */
@@ -50,7 +50,8 @@ describe("sendFile", () => {
     });
 
     // 最後のメッセージは file-end
-    const endMsg: FileTransferMessage = JSON.parse(calls.at(-1)![0] as string);
+    // biome-ignore lint/suspicious/noExplicitAny: 型アサーションで FileTransferMessage として扱う
+    const endMsg: FileTransferMessage = JSON.parse(calls.at(-1)?.[0] as string);
     expect(endMsg).toEqual({ type: "file-end" });
 
     // メタとエンドの間にバイナリチャンクがある
@@ -67,7 +68,7 @@ describe("sendFile", () => {
 
     expect(onProgress).toHaveBeenCalled();
     // 最後の呼び出しで sent === total
-    const lastCall = onProgress.mock.calls.at(-1)![0];
+    const lastCall = onProgress.mock.calls.at(-1)?.[0];
     expect(lastCall.sent).toBe(100);
     expect(lastCall.total).toBe(100);
   });
@@ -96,9 +97,7 @@ describe("sendFile", () => {
 
     await sendFile(channel, file);
 
-    const meta: FileTransferMessage = JSON.parse(
-      (channel.send as ReturnType<typeof vi.fn>).mock.calls[0][0] as string,
-    );
+    const meta: FileTransferMessage = JSON.parse((channel.send as ReturnType<typeof vi.fn>).mock.calls[0][0] as string);
     if (meta.type === "file-meta") {
       expect(meta.mimeType).toBe("application/octet-stream");
     }
