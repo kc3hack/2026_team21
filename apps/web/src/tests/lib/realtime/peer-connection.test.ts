@@ -218,7 +218,7 @@ describe("PeerConnectionManager", () => {
       await manager.createOffer();
       const pc = latestMockPc;
 
-      signaling._trigger("peer-left");
+      await signaling._trigger("peer-left");
 
       expect(pc.close).toHaveBeenCalled();
       expect(onDisconnected).toHaveBeenCalledOnce();
