@@ -37,7 +37,7 @@ export const HomeClient = () => {
       {/* QRコード表示エリア */}
       <div id="qr-container" class="qr-container">
         <p class="qr-text">相手にQRを読み取らせてください</p>
-        <div class="qr-mock-box">QRコード(仮)</div>
+        <div class="qr-image-canvas" id="qr-image-canvas"></div>
         <a href="/room/test1234" class="mock-qr-btn">
           【テスト】QRを読んだことにして進む
         </a>
