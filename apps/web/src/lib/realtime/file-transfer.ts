@@ -7,6 +7,9 @@ const CHUNK_SIZE = 16 * 1024;
 const BUFFER_HIGH_WATERMARK = CHUNK_SIZE * 8;
 const BUFFER_LOW_WATERMARK = CHUNK_SIZE * 2;
 
+/** バッファ drain 待機のタイムアウト (ms) */
+const DRAIN_TIMEOUT_MS = 30_000;
+
 export type FileSendProgress = {
   sent: number;
   total: number;
@@ -59,16 +62,42 @@ function waitForBufferDrain(channel: RTCDataChannel): Promise<void> {
     return Promise.resolve();
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const prev = channel.bufferedAmountLowThreshold;
     channel.bufferedAmountLowThreshold = BUFFER_LOW_WATERMARK;
 
-    const onDrain = () => {
+    const cleanup = () => {
+      clearTimeout(timer);
       channel.removeEventListener("bufferedamountlow", onDrain);
+      channel.removeEventListener("close", onClose);
+      channel.removeEventListener("error", onError);
       channel.bufferedAmountLowThreshold = prev;
+    };
+
+    const onDrain = () => {
+      cleanup();
       resolve();
     };
+
+    const onClose = () => {
+      cleanup();
+      reject(new Error("DataChannel closed while waiting for buffer drain"));
+    };
+
+    const onError = (ev: Event) => {
+      cleanup();
+      const errorEvent = ev as RTCErrorEvent;
+      reject(errorEvent.error ?? new Error("DataChannel error while waiting for buffer drain"));
+    };
+
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Buffer drain timed out after ${DRAIN_TIMEOUT_MS}ms`));
+    }, DRAIN_TIMEOUT_MS);
+
     channel.addEventListener("bufferedamountlow", onDrain);
+    channel.addEventListener("close", onClose);
+    channel.addEventListener("error", onError);
   });
 }
 
