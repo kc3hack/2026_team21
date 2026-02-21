@@ -4,6 +4,11 @@ import { Layout } from "@/pages/layout";
 const app = new Hono();
 
 app.get("/realtime", (c) => {
+  const bindings = c.env as Record<string, unknown>;
+  const turnUsername =
+    typeof bindings.CF_TURN_USERNAME === "string" ? bindings.CF_TURN_USERNAME : "";
+  const turnCredential = typeof bindings.CF_TURN_TOKEN === "string" ? bindings.CF_TURN_TOKEN : "";
+
   return c.render(
     <Layout>
       <section class="realtime-debug-page">
@@ -162,6 +167,29 @@ app.get("/realtime", (c) => {
           __html: `
             (() => {
               const CHUNK_SIZE = 16 * 1024;
+              const turnUsername = ${JSON.stringify(turnUsername)};
+              const turnCredential = ${JSON.stringify(turnCredential)};
+              const iceServers = [{ urls: "stun:stun.cloudflare.com:3478" }];
+
+              if (turnUsername && turnCredential) {
+                iceServers.push(
+                  {
+                    urls: "turn:turn.cloudflare.com:3478?transport=udp",
+                    username: turnUsername,
+                    credential: turnCredential,
+                  },
+                  {
+                    urls: "turn:turn.cloudflare.com:3478?transport=tcp",
+                    username: turnUsername,
+                    credential: turnCredential,
+                  },
+                  {
+                    urls: "turns:turn.cloudflare.com:5349?transport=tcp",
+                    username: turnUsername,
+                    credential: turnCredential,
+                  }
+                );
+              }
 
               const roomInput = document.getElementById("room-id");
               const connectBtn = document.getElementById("connect-btn");
@@ -235,11 +263,12 @@ app.get("/realtime", (c) => {
                   pc.close();
                 }
                 pc = new RTCPeerConnection({
-                  iceServers: [
-                    { urls: "stun:stun.l.google.com:19302" },
-                    { urls: "stun:stun1.l.google.com:19302" }
-                  ]
+                  iceServers,
                 });
+                appendLog("ice-servers", iceServers.map((server) => server.urls));
+                if (!turnUsername || !turnCredential) {
+                  appendLog("turn-config-missing", "CF_TURN_USERNAME / CF_TURN_TOKEN");
+                }
 
                 pc.onicecandidate = (event) => {
                   if (event.candidate) {
@@ -248,6 +277,20 @@ app.get("/realtime", (c) => {
                       candidate: event.candidate.toJSON(),
                     });
                   }
+                };
+                pc.onicecandidateerror = (event) => {
+                  appendLog("ice-candidate-error", {
+                    address: event.address,
+                    url: event.url,
+                    errorCode: event.errorCode,
+                    errorText: event.errorText,
+                  });
+                };
+                pc.oniceconnectionstatechange = () => {
+                  appendLog("ice-state", pc.iceConnectionState);
+                };
+                pc.onicegatheringstatechange = () => {
+                  appendLog("ice-gathering", pc.iceGatheringState);
                 };
 
                 pc.ondatachannel = (event) => {
