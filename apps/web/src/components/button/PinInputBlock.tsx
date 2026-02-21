@@ -63,20 +63,32 @@ const pinInputStyles = css`
   }
 `;
 
+const PIN_INPUT_KEYS = ["pin-1", "pin-2", "pin-3", "pin-4", "pin-5", "pin-6"] as const;
+
 export const PinInputBlock = () => {
   // 入力フォーカス移動のロジックを簡易的に実装
-  const handleInput = (e: any) => {
-    const target = e.target;
+  const handleInput = (e: InputEvent) => {
+    const target = e.currentTarget;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
     const val = target.value;
-    if (val && target.nextElementSibling) {
-      target.nextElementSibling.focus();
+    const nextInput = target.nextElementSibling;
+    if (val && nextInput instanceof HTMLInputElement) {
+      nextInput.focus();
     }
   };
 
-  const handleKeyDown = (e: any) => {
-    const target = e.target;
-    if (e.key === "Backspace" && !target.value && target.previousElementSibling) {
-      target.previousElementSibling.focus();
+  const handleKeyDown = (e: KeyboardEvent) => {
+    const target = e.currentTarget;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const previousInput = target.previousElementSibling;
+    if (e.key === "Backspace" && !target.value && previousInput instanceof HTMLInputElement) {
+      previousInput.focus();
     }
   };
 
@@ -84,9 +96,9 @@ export const PinInputBlock = () => {
     <div class={containerStyles}>
       <p class={titleStyles}>6桁の番号を入力</p>
       <div class={pinContainerStyles}>
-        {[...Array(6)].map((_, i) => (
+        {PIN_INPUT_KEYS.map((key) => (
           <input
-            key={i}
+            key={key}
             type="text"
             inputMode="numeric"
             maxLength={1}
