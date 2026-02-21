@@ -34,3 +34,4 @@ catalog:
   vite-ssr-components: ^0.5.2
   vitest: ^4.0.18
   wrangler: ^4.17.0
+  workerd: 1.20260214.0

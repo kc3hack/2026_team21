@@ -17,6 +17,7 @@
     "vite": "catalog:",
     "vite-ssr-components": "catalog:",
     "vitest": "catalog:",
-    "wrangler": "catalog:"
+    "wrangler": "catalog:",
+    "workerd": "catalog:"
   }
 }
