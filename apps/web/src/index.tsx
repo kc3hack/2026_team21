@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import api from "@/routes/api";
 import type { WorkerEnv } from "@/app";
 import pages from "@/pages";
+import api from "@/routes/api";
 
 const app = new Hono<WorkerEnv>();
 
