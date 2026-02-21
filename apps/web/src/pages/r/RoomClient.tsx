@@ -28,9 +28,7 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
             <div class="cheek cheek-right" />
 
             {/* 目パーツ */}
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-eye-right" src="/images/room/right_sleep.svg" alt="right_eye" class="ghost-part ghost-eye" />
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-eye-left" src="/images/room/left_sleep.svg" alt="left_eye" class="ghost-part ghost-eye" />
           </div>
           <div class="ghost-shadow" />
@@ -59,6 +57,14 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
             アップロード
           </button>
         </form>
+      </div>
+
+      <div id="qr-container" class="qr-container">
+        <p class="qr-text">QRコードを読み取ってもらいましょう</p>
+        <div class="qr-image-canvas" id="qr-image-canvas"></div>
+        <button type="button" class="mock-qr-btn" id="mock-match-btn">
+          【テスト】QRを読んだことにして進む
+        </button>
       </div>
 
       {/* Viteの機能を使ってTSファイルを直接ブラウザで読み込む */}

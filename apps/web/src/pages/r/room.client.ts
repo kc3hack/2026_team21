@@ -1,4 +1,5 @@
 // apps/web/src/pages/r/room.client.ts
+import { createQRCode } from "../../lib/qrcode/index";
 
 document.addEventListener("DOMContentLoaded", () => {
   const ghostArea = document.getElementById("ghost-area");
@@ -12,7 +13,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusBtnArea = document.getElementById("status-btn-area");
   const uploadForm = document.getElementById("upload-form");
 
-  const zzzEffect = document.getElementById('zzz-effect');
+  const zzzEffect = document.getElementById("zzz-effect");
+  const qrContainer = document.getElementById("qr-container");
+  const qrImageCanvas = document.getElementById("qr-image-canvas");
+  const mockMatchBtn = document.getElementById("mock-match-btn");
 
   const playNotice = () => {
     ghostBody?.classList.remove("is-noticing");
@@ -38,67 +42,88 @@ document.addEventListener("DOMContentLoaded", () => {
     eyeLeft.style.transform = transformStyle;
   };
 
+  // === 1. ページ読み込み時の処理（QRコードの生成と表示） ===
+  const roomUrl = window.location.href; // 現在のルームURLを取得
+  const qrCode = createQRCode(roomUrl);
+  if (qrImageCanvas) {
+    qrCode.append(qrImageCanvas);
+  }
+
+  // 画面を開いて0.5秒後に、QRコードをフワッと下からスライドインさせる
   setTimeout(() => {
-    if (zzzEffect) {
-      zzzEffect.style.opacity = '0';
-      setTimeout(() => {
-        zzzEffect.style.display = 'none';
-      }, 300);
-    }
-  }, 2700);
+    qrContainer?.classList.add("is-visible");
+  }, 500);
 
+  // === 2. マッチング成功時の処理（自動ではなく、QRが読まれた時に発火する） ===
+  // === 2. マッチング成功時の処理（テストボタンを押した時） ===
+  const onMatchSuccess = () => {
+    // 1. まずQRコードを下にスライドして隠す
+    qrContainer?.classList.remove("is-visible");
 
-  setTimeout(() => {
-    if (statusBtn) statusBtn.textContent = "マッチング成功";
-    if (eyeRight && eyeLeft) {
-      eyeRight.src = "/images/room/right_sleep.svg";
-      eyeLeft.src = "/images/room/wakeup.svg";
-    }
-    playNotice();
-
+    // 2. 【2秒経過】QRが消えてから2秒後に目を覚ます！
     setTimeout(() => {
-      if (statusBtnArea) {
-        statusBtnArea.style.opacity = "0";
-        statusBtnArea.style.pointerEvents = "none";
-
+      // zzzエフェクトを即座に消す
+      if (zzzEffect) {
+        zzzEffect.style.opacity = "0";
         setTimeout(() => {
-          statusBtnArea.style.visibility = "hidden";
+          zzzEffect.style.display = "none";
         }, 300);
       }
 
-      ghostArea?.classList.add("is-moved-left");
-      ghostTilter?.classList.add("is-tilting");
-      armRight?.classList.add("is-arms-back");
-      armLeft?.classList.add("is-arms-back");
+      // ビックリして起きるモーション
+      if (statusBtn) statusBtn.textContent = "マッチング成功";
+      if (eyeRight && eyeLeft) {
+        eyeRight.src = "/images/home/right_eye.svg"; // 右目はパッチリ開ける
+        eyeLeft.src = "/images/room/wakeup.svg"; // 左目はビックリ目
+      }
+      playNotice();
 
+      // その後のスライド移動とフォーム表示モーション
       setTimeout(() => {
-        ghostTilter?.classList.remove("is-tilting");
-        armRight?.classList.remove("is-arms-back");
-        armLeft?.classList.remove("is-arms-back");
+        if (statusBtnArea) {
+          statusBtnArea.style.opacity = "0";
+          statusBtnArea.style.pointerEvents = "none";
+          setTimeout(() => {
+            statusBtnArea.style.visibility = "hidden";
+          }, 300);
+        }
 
-        uploadForm?.classList.add("is-visible");
+        ghostArea?.classList.add("is-moved-left");
+        ghostTilter?.classList.add("is-tilting");
+        armRight?.classList.add("is-arms-back");
+        armLeft?.classList.add("is-arms-back");
 
         setTimeout(() => {
-          if (eyeLeft && eyeRight) {
-            eyeLeft.src = "/images/home/left_eye.svg";
-            eyeRight.src = "/images/home/right_eye.svg";
-          }
+          ghostTilter?.classList.remove("is-tilting");
+          armRight?.classList.remove("is-arms-back");
+          armLeft?.classList.remove("is-arms-back");
 
-          armLeft?.classList.add("is-presenting-left");
+          uploadForm?.classList.add("is-visible");
 
-          eyeRight?.classList.add("is-looking-right");
-          eyeLeft?.classList.add("is-looking-right");
+          setTimeout(() => {
+            if (eyeLeft && eyeRight) {
+              eyeLeft.src = "/images/home/left_eye.svg";
+              eyeRight.src = "/images/home/right_eye.svg";
+            }
 
-          const onFirstMouseMove = (e: MouseEvent) => {
-            eyeRight?.classList.remove("is-looking-right");
-            eyeLeft?.classList.remove("is-looking-right");
-            document.removeEventListener("mousemove", onFirstMouseMove);
-            document.addEventListener("mousemove", handleMouseMove);
-            handleMouseMove(e);
-          };
-          document.addEventListener("mousemove", onFirstMouseMove);
-        }, 2000);
-      }, 800);
-    }, 1500);
-  }, 3000);
+            armLeft?.classList.add("is-presenting-left");
+            eyeRight?.classList.add("is-looking-right");
+            eyeLeft?.classList.add("is-looking-right");
+
+            const onFirstMouseMove = (e: MouseEvent) => {
+              eyeRight?.classList.remove("is-looking-right");
+              eyeLeft?.classList.remove("is-looking-right");
+              document.removeEventListener("mousemove", onFirstMouseMove);
+              document.addEventListener("mousemove", handleMouseMove);
+              handleMouseMove(e);
+            };
+            document.addEventListener("mousemove", onFirstMouseMove);
+          }, 2000);
+        }, 800);
+      }, 1500);
+    }, 2000); // ← ここが「QRが消えてから目を覚ますまでの2秒間」の待機設定です
+  };
+
+  // テストボタンを押したときにマッチング成功処理を実行！
+  mockMatchBtn?.addEventListener("click", onMatchSuccess);
 });
