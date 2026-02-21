@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import type { WorkerEnv } from "@/app";
 import { HomePage } from "@/components/pages";
 import { CounterPageRoute } from "@/pages/counter";
 import { DebugPage } from "@/pages/debug";
