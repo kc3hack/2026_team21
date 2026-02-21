@@ -10,13 +10,14 @@
     "test": "vitest --run"
   },
   "dependencies": {
-    "hono": "^4.11.10"
+    "hono": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.2.3",
-    "vite": "^6.3.5",
-    "vite-ssr-components": "^0.5.2",
+    "@cloudflare/vite-plugin": "catalog:",
+    "vite": "catalog:",
+    "vite-ssr-components": "catalog:",
     "vitest": "catalog:",
-    "wrangler": "^4.17.0"
+    "wrangler": "catalog:",
+    "workerd": "catalog:"
   }
 }
