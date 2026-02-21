@@ -42,6 +42,15 @@ export const TopPage = () => {
   const {
     isOpen,
     url,
+    wsStatus,
+    peerStatus,
+    peerRole,
+    dataChannelStatus,
+    sendProgress,
+    lastSentFile,
+    errorMessage,
+    fileInputRef,
+    shortcode,
     toggleOpen,
     handleCreateRoom,
     fileInputRef,
@@ -152,20 +161,8 @@ export const TopPage = () => {
         >
           <h2 style="font-weight: 900; margin-bottom: 1rem;">QRコード</h2>
           <div ref={qrCodeRef} />
-          <button
-            type="button"
-            onClick={closeModal}
-            style="
-              margin-top: 1.5rem;
-              background: #758e6f;
-              color: white;
-              border: none;
-              padding: 0.5rem 2rem;
-              border-radius: 2rem;
-              cursor: pointer;
-              font-weight: bold;
-            "
-          >
+          <div>Shortcode: {shortcode}</div>
+          <button type="button" onClick={toggleOpen}>
             閉じる
           </button>
         </div>

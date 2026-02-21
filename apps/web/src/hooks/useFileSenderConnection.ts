@@ -3,6 +3,7 @@ import { fetchTurnIceServer, getSignalUrl } from "@/lib/realtime/client-utils";
 import { sendFile } from "@/lib/realtime/file-transfer";
 import { PeerConnectionManager } from "@/lib/realtime/peer-connection";
 import { SignalingClient } from "@/lib/realtime/signaling-client";
+import { apiClient } from "@/pages/api/index.client";
 
 /**
  * 送信側のルーム作成と WebRTC 接続状態を管理する。
@@ -18,6 +19,7 @@ export const useFileSenderConnection = () => {
   const [sendProgress, setSendProgress] = useState("0 / 0 bytes");
   const [lastSentFile, setLastSentFile] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [shortcode, setShortcode] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -193,11 +195,11 @@ export const useFileSenderConnection = () => {
 
     void (async () => {
       // 部屋番号を生成する
-      const response = await fetch("/api/rooms", { method: "POST" });
+      const response = await apiClient.rooms.$post();
       if (!response.ok) {
         throw new Error(`Failed to create room: ${response.status}`);
       }
-      const payload = (await response.json()) as { id?: unknown };
+      const payload = await response.json();
       if (typeof payload.id !== "string" || payload.id.length === 0) {
         throw new Error("Invalid room id response");
       }
@@ -206,6 +208,7 @@ export const useFileSenderConnection = () => {
       const uri = `${location.origin}/r/${encodeURIComponent(payload.id)}`;
 
       setRoomId(payload.id);
+      setShortcode(payload.shortcode);
       setErrorMessage("");
 
       // モーダルを開く
@@ -229,6 +232,7 @@ export const useFileSenderConnection = () => {
     lastSentFile,
     errorMessage,
     fileInputRef,
+    shortcode,
     toggleOpen,
     handleCreateRoom,
   };
