@@ -96,6 +96,7 @@
           }
         },
         "domains": {
+          "next": "none",
           "react": "recommended",
           "test": "recommended"
         }
