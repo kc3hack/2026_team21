@@ -1,6 +1,8 @@
 import { Hono } from "hono";
+import { ShortCodeForm } from "@/components/input";
 import { useFileSenderConnection } from "@/hooks/useFileSenderConnection";
 import { useQRCode } from "@/hooks/useQRCode";
+import { apiClient } from "@/pages/api/index.client";
 import { Page } from "@/pages/router";
 
 export const TopPageRoute = () => {
@@ -31,6 +33,17 @@ export const TopPage = () => {
     handleCreateRoom,
   } = useFileSenderConnection();
   const { ref: qrCodeRef } = useQRCode(url);
+
+  const findRoomIdByShortCode = async (shortcode: string) => {
+    const validate = await apiClient.rooms[":shortcode"].$get({ param: { shortcode } });
+    if (validate.ok) {
+      const { id, shortcode } = await validate.json();
+      console.log("Found room", id, shortcode);
+      return id;
+    } else {
+      throw new Error("Invalid shortcode");
+    }
+  };
 
   return (
     <div>
@@ -84,6 +97,18 @@ export const TopPage = () => {
           </button>
         </div>
       )}
+
+      <ShortCodeForm
+        onSubmit={async (shortcode) => {
+          try {
+            const roomId = await findRoomIdByShortCode(shortcode);
+            window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}`;
+          } catch (error) {
+            console.error(error);
+            alert("無効なショートコードです");
+          }
+        }}
+      />
     </div>
   );
 };
