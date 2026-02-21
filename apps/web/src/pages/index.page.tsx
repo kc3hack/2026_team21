@@ -4,7 +4,6 @@ import { useState } from "hono/jsx";
 import { SlidingGhost } from "@/components/animations/SlidingGhost";
 import { FileSelectArea } from "@/components/button/FileSelectArea";
 import { ReceiveButton } from "@/components/button/ReceiveButton";
-import { ShortCodeForm } from "@/components/input";
 import { LogoIcon } from "@/components/Logo";
 import { useFileSenderConnection } from "@/hooks/useFileSenderConnection";
 import { useQRCode } from "@/hooks/useQRCode";
@@ -178,18 +177,6 @@ export const TopPage = () => {
           </button>
         </div>
       )}
-
-      <ShortCodeForm
-        onSubmit={async (shortcode) => {
-          try {
-            const roomId = await findRoomIdByShortCode(shortcode);
-            window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}`;
-          } catch (error) {
-            console.error(error);
-            alert("無効なショートコードです");
-          }
-        }}
-      />
     </div>
   );
 };

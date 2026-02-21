@@ -65,13 +65,19 @@ const pinInputStyles = css`
 
 const PIN_INPUT_KEYS = ["pin-1", "pin-2", "pin-3", "pin-4", "pin-5", "pin-6"] as const;
 
-export const PinInputBlock = () => {
+type PinInputBlockProps = {
+  onSubmit: (shortCode: string) => Promise<void> | void;
+};
+
+export const PinInputBlock = (props: PinInputBlockProps) => {
   // 入力フォーカス移動のロジックを簡易的に実装
   const handleInput = (e: InputEvent) => {
     const target = e.currentTarget;
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
+
+    target.value = target.value.replace(/\D/g, "").slice(0, 1);
 
     const val = target.value;
     const nextInput = target.nextElementSibling;
@@ -92,13 +98,29 @@ export const PinInputBlock = () => {
     }
   };
 
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+
+    const shortCode = PIN_INPUT_KEYS.map((key) => {
+      const input = form.elements.namedItem(key);
+      return input instanceof HTMLInputElement ? input.value : "";
+    }).join("");
+
+    await props.onSubmit(shortCode);
+  };
+
   return (
-    <div class={containerStyles}>
+    <form action="" class={containerStyles} onSubmit={handleSubmit}>
       <p class={titleStyles}>6桁の番号を入力</p>
       <div class={pinContainerStyles}>
         {PIN_INPUT_KEYS.map((key) => (
           <input
             key={key}
+            name={key}
             type="text"
             inputMode="numeric"
             maxLength={1}
@@ -109,11 +131,11 @@ export const PinInputBlock = () => {
         ))}
       </div>
       <button
-        type="button"
+        type="submit"
         style="margin-top: 0.5rem; background: #f6ad49; color: white; border: none; padding: 0.8rem 2rem; border-radius: 2rem; font-weight: 900; cursor: pointer; font-size: 1.1rem;"
       >
         受信する
       </button>
-    </div>
+    </form>
   );
 };
