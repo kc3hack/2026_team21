@@ -36,6 +36,7 @@ export class PeerConnectionManager {
   private dataChannel: RTCDataChannel | null = null;
   private listeners = new Map<keyof PeerEventMap, Set<(...args: never[]) => void>>();
   private makingOffer = false;
+  private pendingRemoteCandidates: RTCIceCandidateInit[] = [];
   private readonly RTC_CONFIG: RTCConfiguration;
 
   constructor(
@@ -112,6 +113,7 @@ export class PeerConnectionManager {
     this.pc = this.createPeerConnection();
     try {
       await this.pc.setRemoteDescription({ type: "offer", sdp });
+      await this.flushPendingRemoteCandidates();
       const answer = await this.pc.createAnswer();
       await this.pc.setLocalDescription(answer);
       const answerSdp = this.pc.localDescription?.sdp;
@@ -132,10 +134,18 @@ export class PeerConnectionManager {
       return;
     }
     await this.pc.setRemoteDescription({ type: "answer", sdp });
+    await this.flushPendingRemoteCandidates();
   }
 
   private async handleCandidate(candidate: RTCIceCandidateInit): Promise<void> {
-    if (!this.pc) return;
+    if (!this.pc) {
+      this.pendingRemoteCandidates.push(candidate);
+      return;
+    }
+    if (!this.pc.remoteDescription) {
+      this.pendingRemoteCandidates.push(candidate);
+      return;
+    }
     try {
       await this.pc.addIceCandidate(candidate);
     } catch (e) {
@@ -143,6 +153,18 @@ export class PeerConnectionManager {
       if (!this.makingOffer) {
         throw e;
       }
+    }
+  }
+
+  private async flushPendingRemoteCandidates(): Promise<void> {
+    if (!this.pc || !this.pc.remoteDescription || this.pendingRemoteCandidates.length === 0) {
+      return;
+    }
+
+    const queued = this.pendingRemoteCandidates;
+    this.pendingRemoteCandidates = [];
+    for (const candidate of queued) {
+      await this.pc.addIceCandidate(candidate);
     }
   }
 
@@ -194,6 +216,7 @@ export class PeerConnectionManager {
   }
 
   cleanup(): void {
+    this.pendingRemoteCandidates = [];
     this.dataChannel?.close();
     this.dataChannel = null;
     this.pc?.close();

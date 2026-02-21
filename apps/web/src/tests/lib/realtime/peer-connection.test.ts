@@ -104,6 +104,20 @@ function createMockSignaling(): SignalingClient & {
   };
 }
 
+function createDeferred<T = void>(): {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: unknown) => void;
+} {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 /* ── テスト ── */
 describe("PeerConnectionManager", () => {
   beforeEach(() => {
@@ -252,14 +266,43 @@ describe("PeerConnectionManager", () => {
         sdp: "stale-answer-sdp",
       });
     });
-  });
 
-  describe("handleCandidate (via signaling)", () => {
-    it("candidate を受信して addIceCandidate を呼ぶ", async () => {
+    it("answer 処理中に先着した candidate をキューして後で適用する", async () => {
       const signaling = createMockSignaling();
       const manager = new PeerConnectionManager(signaling, createMockEnv());
       await manager.createOffer();
       const pc = latestMockPc;
+      const deferred = createDeferred<void>();
+      const originalSetRemoteDescription = pc.setRemoteDescription;
+      pc.setRemoteDescription = vi.fn(async (desc: RTCSessionDescriptionInit) => {
+        await deferred.promise;
+        await originalSetRemoteDescription(desc);
+      });
+
+      const answerPromise = signaling._trigger("answer", "remote-answer-sdp");
+      await Promise.resolve();
+
+      const candidate: RTCIceCandidateInit = {
+        candidate: "candidate:queued-before-answer",
+        sdpMLineIndex: 0,
+      };
+      await signaling._trigger("candidate", candidate);
+      expect(pc.addIceCandidate).not.toHaveBeenCalled();
+
+      deferred.resolve();
+      await answerPromise;
+
+      expect(pc.addIceCandidate).toHaveBeenCalledWith(candidate);
+    });
+  });
+
+  describe("handleCandidate (via signaling)", () => {
+    it("remoteDescription 設定後に candidate を受信すると addIceCandidate を呼ぶ", async () => {
+      const signaling = createMockSignaling();
+      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      await manager.createOffer();
+      const pc = latestMockPc;
+      await signaling._trigger("answer", "remote-answer-sdp");
 
       const candidate: RTCIceCandidateInit = {
         candidate: "candidate:123",
