@@ -35,7 +35,7 @@ export const TopPage = () => {
       }
 
       // URL を作る
-      const uri = `/r/${encodeURIComponent(payload.id)}`;
+      const uri = `${location.origin}/r/${encodeURIComponent(payload.id)}`;
 
       // モーダルを開く
       setUrl(uri);
