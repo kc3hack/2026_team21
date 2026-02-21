@@ -19,8 +19,7 @@ const getRTCConfig = (env: Cloudflare.Env): RTCConfiguration => ({
       credential: env.CF_TURN_TOKEN,
     },
   ],
-}); 
-
+});
 
 const DATA_CHANNEL_LABEL = "file-transfer";
 
@@ -35,14 +34,14 @@ export type PeerEventMap = {
 export class PeerConnectionManager {
   private pc: RTCPeerConnection | null = null;
   private dataChannel: RTCDataChannel | null = null;
-  private listeners = new Map<
-    keyof PeerEventMap,
-    Set<(...args: never[]) => void>
-  >();
+  private listeners = new Map<keyof PeerEventMap, Set<(...args: never[]) => void>>();
   private makingOffer = false;
   private readonly RTC_CONFIG: RTCConfiguration;
 
-  constructor(private readonly signaling: SignalingClient, env: CloudflareBindings) {
+  constructor(
+    private readonly signaling: SignalingClient,
+    env: CloudflareBindings,
+  ) {
     this.RTC_CONFIG = getRTCConfig(env);
     this.setupSignalingHandlers();
   }
@@ -161,10 +160,7 @@ export class PeerConnectionManager {
     };
 
     pc.onconnectionstatechange = () => {
-      if (
-        pc.connectionState === "disconnected" ||
-        pc.connectionState === "failed"
-      ) {
+      if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
         this.cleanup();
         this.emit("disconnected");
       }
@@ -211,10 +207,7 @@ export class PeerConnectionManager {
     this.listeners.get(event)?.delete(callback as (...args: never[]) => void);
   }
 
-  private emit<K extends keyof PeerEventMap>(
-    event: K,
-    ...args: Parameters<PeerEventMap[K]>
-  ): void {
+  private emit<K extends keyof PeerEventMap>(event: K, ...args: Parameters<PeerEventMap[K]>): void {
     for (const callback of this.listeners.get(event) ?? []) {
       // biome-ignore lint/suspicious/noExplicitAny: 型安全は emit のシグネチャで保証される
       (callback as (...a: any[]) => void)(...args);

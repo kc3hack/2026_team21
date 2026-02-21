@@ -5,8 +5,7 @@ const app = new Hono();
 
 app.get("/realtime", (c) => {
   const bindings = c.env as Record<string, unknown>;
-  const turnUsername =
-    typeof bindings.CF_TURN_USERNAME === "string" ? bindings.CF_TURN_USERNAME : "";
+  const turnUsername = typeof bindings.CF_TURN_USERNAME === "string" ? bindings.CF_TURN_USERNAME : "";
   const turnCredential = typeof bindings.CF_TURN_TOKEN === "string" ? bindings.CF_TURN_TOKEN : "";
 
   return c.render(
