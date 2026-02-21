@@ -30,8 +30,9 @@ const ghostContainerClass = css`
 
   @media (max-width: 600px) {
     &.mobile-middle {
-      bottom: clamp(9.5rem, 29vh, 14rem);
-      transform: translateX(50%) scale(0.43);
+      top: 66%;
+      bottom: auto;
+      transform: translateX(50%) translateY(-50%) scale(0.46);
     }
   }
 
@@ -46,12 +47,12 @@ const ghostContainerClass = css`
   }
 
   &.is-entering-left {
-    animation: ${slideInFromLeft} 3.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
+    animation: ${slideInFromLeft} 4.5s linear both;
   }
 
   @media (max-width: 600px) {
     &.is-entering-left {
-      animation: ${slideInFromLeftMobile} 3.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
+      animation: ${slideInFromLeftMobile} 4.5s linear both;
     }
   }
 

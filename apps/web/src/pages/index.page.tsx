@@ -52,8 +52,9 @@ const responsiveWrapper = css`
 
   @media (max-width: 600px) {
     min-height: 100dvh;
-    padding: 0.4rem 0.9rem calc(4.4rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.6rem 1rem calc(3.2rem + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
+    justify-content: center;
   }
 `;
 
@@ -67,7 +68,7 @@ const topSectionClass = css`
 
   @media (max-width: 600px) {
     flex: 0 0 auto;
-    margin-top: 0.25rem;
+    margin-top: 0;
   }
 `;
 
@@ -84,9 +85,9 @@ const centerSectionClass = css`
   box-sizing: border-box;
 
   @media (max-width: 600px) {
-    max-width: 23.5rem;
-    padding: 0 0.4rem;
-    margin: 0.35rem 0;
+    max-width: 25.4rem;
+    padding: 0 0.25rem;
+    margin: 0.2rem 0;
   }
 `;
 
@@ -95,7 +96,7 @@ const spacerClass = css`
   width: 100%;
 
   @media (max-width: 600px) {
-    min-height: 1.8rem;
+    min-height: 0.5rem;
   }
 `;
 
@@ -236,10 +237,13 @@ export const TopPage = () => {
       return;
     }
 
+    let resetDelayMs = 1300;
+
     if (from === "complete") {
       setIsEnteringFromRight(true);
     } else if (from === "receive-back") {
       setIsEnteringFromLeft(true);
+      resetDelayMs = 4700;
     } else {
       return;
     }
@@ -247,7 +251,7 @@ export const TopPage = () => {
     const timer = setTimeout(() => {
       setIsEnteringFromRight(false);
       setIsEnteringFromLeft(false);
-    }, 1300);
+    }, resetDelayMs);
 
     params.delete("from");
     const nextSearch = params.toString();
@@ -382,7 +386,7 @@ export const TopPage = () => {
           enteringFromLeft={isEnteringFromLeft}
           wakeEyesOnMove={useWakeEyesOnMove}
           slowMove={flowStage === "transferring"}
-          mobilePlacement={flowStage === "idle" && !isNavigatingToReceive ? "button" : "bottom"}
+          mobilePlacement={flowStage === "idle" ? "button" : "bottom"}
         />
       )}
 

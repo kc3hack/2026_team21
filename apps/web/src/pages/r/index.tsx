@@ -27,8 +27,9 @@ const responsiveWrapper = css`
 
   @media (max-width: 600px) {
     min-height: 100dvh;
-    padding: 0.4rem 0.9rem calc(4.7rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.6rem 1rem calc(3.4rem + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
+    justify-content: center;
   }
 `;
 
@@ -42,7 +43,7 @@ const topSectionClass = css`
 
   @media (max-width: 600px) {
     flex: 0 0 auto;
-    margin-top: 0.25rem;
+    margin-top: 0;
   }
 `;
 
@@ -59,9 +60,9 @@ const centerSectionClass = css`
   box-sizing: border-box;
 
   @media (max-width: 600px) {
-    max-width: 25rem;
-    padding: 0 0.4rem;
-    margin: 0.35rem 0;
+    max-width: 25.6rem;
+    padding: 0 0.25rem;
+    margin: 0.25rem 0;
   }
 `;
 
@@ -70,7 +71,7 @@ const spacerClass = css`
   width: 100%;
 
   @media (max-width: 600px) {
-    min-height: 1.8rem;
+    min-height: 0.7rem;
   }
 `;
 
@@ -81,8 +82,8 @@ const receiveHeadingClass = css`
   margin: 0 0 2rem;
 
   @media (max-width: 600px) {
-    font-size: 1.62rem;
-    margin-bottom: 0.95rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.85rem;
   }
 `;
 
@@ -149,10 +150,10 @@ const waitCardClass = css`
   }
 
   @media (max-width: 600px) {
-    width: min(94vw, 22.6rem);
+    width: min(96vw, 23.8rem);
     border-radius: 18px;
     border-width: 4px;
-    padding: 1.24rem 1.04rem;
+    padding: 1.4rem 1.15rem;
 
     .wait-title {
       font-size: 1.22rem;

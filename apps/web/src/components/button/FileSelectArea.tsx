@@ -13,12 +13,13 @@ const containerStyles = css`
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
+  box-sizing: border-box;
 
   /* モバイル対応：さらにコンパクトに */
   @media (max-width: 600px) {
-    width: min(94vw, 21rem);
-    max-width: 21rem;
-    padding: 1.45rem 1.1rem;
+    width: min(96vw, 22.6rem);
+    max-width: 22.6rem;
+    padding: 1.7rem 1.2rem;
     gap: 0.65rem;
     border-width: 4px;
   }
@@ -42,8 +43,8 @@ const dropZoneStyles = css`
   box-sizing: border-box;
 
   @media (max-width: 600px) {
-    padding: 1.7rem 0.7rem;
-    font-size: 1.08rem;
+    padding: 1.9rem 0.8rem;
+    font-size: 1.12rem;
   }
 
   &:hover {
