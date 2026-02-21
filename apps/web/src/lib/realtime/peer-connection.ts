@@ -25,20 +25,20 @@ export class PeerConnectionManager {
   }
 
   private setupSignalingHandlers(): void {
-    this.signaling.on("offer", (sdp: string) => {
-      void this.handleOffer(sdp).catch((error) => {
+    this.signaling.on("offer", async (sdp: string) => {
+      await this.handleOffer(sdp).catch((error) => {
         console.error("Failed to handle offer:", error);
       });
     });
 
-    this.signaling.on("answer", (sdp: string) => {
-      void this.handleAnswer(sdp).catch((error) => {
+    this.signaling.on("answer", async (sdp: string) => {
+      await this.handleAnswer(sdp).catch((error) => {
         console.error("Failed to handle answer:", error);
       });
     });
 
-    this.signaling.on("candidate", (candidate: RTCIceCandidateInit) => {
-      void this.handleCandidate(candidate).catch((error) => {
+    this.signaling.on("candidate", async (candidate: RTCIceCandidateInit) => {
+      await this.handleCandidate(candidate).catch((error) => {
         console.error("Failed to handle ICE candidate:", error);
       });
     });

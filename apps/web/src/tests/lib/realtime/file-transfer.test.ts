@@ -20,7 +20,7 @@ function createMockChannel(options?: { bufferedAmount?: number }): RTCDataChanne
 }
 
 /* ── Mock File ── */
-function createMockFile(name: string, content: Uint8Array<ArrayBuffer>, mimeType = "application/octet-stream"): File {
+function createMockFile(name: string, content: Uint8Array, mimeType = "application/octet-stream"): File {
   const blob = new Blob([content], { type: mimeType });
   return new File([blob], name, { type: mimeType });
 }
