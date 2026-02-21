@@ -202,12 +202,7 @@ export class PeerConnectionManager {
   }
 
   private shouldRetryWithTurn(pc: RTCPeerConnection): boolean {
-    return (
-      this.pc === pc &&
-      this.isOfferer &&
-      this.currentIceTransportMode === "stun" &&
-      !this.hasTurnRetryAttempted
-    );
+    return this.pc === pc && this.isOfferer && this.currentIceTransportMode === "stun" && !this.hasTurnRetryAttempted;
   }
 
   private async retryOfferWithTurn(): Promise<void> {
