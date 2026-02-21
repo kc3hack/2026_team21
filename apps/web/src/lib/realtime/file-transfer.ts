@@ -22,12 +22,22 @@ export type FileReceiveResult = {
   data: Blob;
 };
 
-/* DataChannelでファイルを送信する */
+/**
+ * DataChannel でファイルを送信する。
+ *
+ * @throws {Error} `channel.readyState` が `"open"` でない場合
+ */
 export async function sendFile(
   channel: RTCDataChannel,
   file: File,
   onProgress?: (progress: FileSendProgress) => void,
 ): Promise<void> {
+  if (channel.readyState !== "open") {
+    throw new Error(
+      `Cannot send file: DataChannel is "${channel.readyState}", expected "open"`,
+    );
+  }
+
   // メタデータを前もって送信しておく
   const meta: FileTransferMessage = {
     type: "file-meta",
