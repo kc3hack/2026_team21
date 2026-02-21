@@ -1,8 +1,25 @@
 import type { SignalingClient } from "./signaling-client";
 
-const RTC_CONFIG: RTCConfiguration = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
-};
+const getRTCConfig = (env: Cloudflare.Env): RTCConfiguration => ({
+  iceServers: [
+    { urls: "stun:stun.cloudflare.com:3478" },
+    {
+      urls: "turn:turn.cloudflare.com:3478?transport=udp",
+      username: env.CF_TURN_USERNAME,
+      credential: env.CF_TURN_TOKEN,
+    },
+    {
+      urls: "turn:turn.cloudflare.com:3478?transport=tcp",
+      username: env.CF_TURN_USERNAME,
+      credential: env.CF_TURN_TOKEN,
+    },
+    {
+      urls: "turns:turn.cloudflare.com:5349?transport=tcp",
+      username: env.CF_TURN_USERNAME,
+      credential: env.CF_TURN_TOKEN,
+    },
+  ],
+});
 
 const DATA_CHANNEL_LABEL = "file-transfer";
 
@@ -19,8 +36,13 @@ export class PeerConnectionManager {
   private dataChannel: RTCDataChannel | null = null;
   private listeners = new Map<keyof PeerEventMap, Set<(...args: never[]) => void>>();
   private makingOffer = false;
+  private readonly RTC_CONFIG: RTCConfiguration;
 
-  constructor(private readonly signaling: SignalingClient) {
+  constructor(
+    private readonly signaling: SignalingClient,
+    env: CloudflareBindings,
+  ) {
+    this.RTC_CONFIG = getRTCConfig(env);
     this.setupSignalingHandlers();
   }
 
@@ -121,7 +143,7 @@ export class PeerConnectionManager {
   }
 
   private createPeerConnection(): RTCPeerConnection {
-    const pc = new RTCPeerConnection(RTC_CONFIG);
+    const pc = new RTCPeerConnection(this.RTC_CONFIG);
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
