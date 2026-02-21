@@ -50,7 +50,6 @@ describe("sendFile", () => {
     });
 
     // 最後のメッセージは file-end
-    // biome-ignore lint/suspicious/noExplicitAny: 型アサーションで FileTransferMessage として扱う
     const endMsg: FileTransferMessage = JSON.parse(calls.at(-1)?.[0] as string);
     expect(endMsg).toEqual({ type: "file-end" });
 

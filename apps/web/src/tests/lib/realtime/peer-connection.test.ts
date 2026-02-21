@@ -38,6 +38,7 @@ class MockRTCPeerConnection {
 
   setLocalDescription = vi.fn(async (desc: RTCSessionDescriptionInit) => {
     this.localDescription = {
+      // biome-ignore lint/style/noNonNullAssertion: test mock
       type: desc.type!,
       sdp: desc.sdp ?? "offer-sdp",
     } as RTCSessionDescription;
@@ -45,6 +46,7 @@ class MockRTCPeerConnection {
 
   setRemoteDescription = vi.fn(async (desc: RTCSessionDescriptionInit) => {
     this.remoteDescription = {
+      // biome-ignore lint/style/noNonNullAssertion: test mock
       type: desc.type!,
       sdp: desc.sdp ?? "",
     } as RTCSessionDescription;
