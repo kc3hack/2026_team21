@@ -27,6 +27,7 @@ function createMockEnv(): Cloudflare.Env {
 
 /* ── Mock RTCPeerConnection (class 形式) ── */
 let latestMockPc: InstanceType<typeof MockRTCPeerConnection>;
+let createdPeerConnectionConfigs: (RTCConfiguration | undefined)[] = [];
 
 class MockRTCPeerConnection {
   localDescription: RTCSessionDescription | null = null;
@@ -74,7 +75,8 @@ class MockRTCPeerConnection {
 
   close = vi.fn();
 
-  constructor(_config?: RTCConfiguration) {
+  constructor(config?: RTCConfiguration) {
+    createdPeerConnectionConfigs.push(config);
     latestMockPc = this;
   }
 }
@@ -121,6 +123,7 @@ function createDeferred<T = void>(): {
 /* ── テスト ── */
 describe("PeerConnectionManager", () => {
   beforeEach(() => {
+    createdPeerConnectionConfigs = [];
     vi.stubGlobal("RTCPeerConnection", MockRTCPeerConnection);
   });
 
@@ -156,6 +159,17 @@ describe("PeerConnectionManager", () => {
       expect(signaling.send).toHaveBeenCalledWith({
         type: "offer",
         sdp: "offer-sdp",
+      });
+    });
+
+    it("最初の接続は STUN のみで開始する", async () => {
+      const signaling = createMockSignaling();
+      const manager = new PeerConnectionManager(signaling, createMockEnv());
+
+      await manager.createOffer();
+
+      expect(createdPeerConnectionConfigs[0]).toEqual({
+        iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
       });
     });
 
@@ -464,19 +478,60 @@ describe("PeerConnectionManager", () => {
       expect(pc.close).toHaveBeenCalled();
     });
 
-    it("failed 状態になると disconnected イベントを発火する", async () => {
+    it("failed 状態になったら TURN で再オファーする", async () => {
       const signaling = createMockSignaling();
       const manager = new PeerConnectionManager(signaling, createMockEnv());
       const onDisconnected = vi.fn();
       manager.on("disconnected", onDisconnected);
 
       await manager.createOffer();
-      const pc = latestMockPc;
-      pc.connectionState = "failed";
-      pc.onconnectionstatechange?.({} as Event);
+      const firstPc = latestMockPc;
+      firstPc.connectionState = "failed";
+      firstPc.onconnectionstatechange?.({} as Event);
+      await Promise.resolve();
+
+      expect(onDisconnected).not.toHaveBeenCalled();
+      expect(firstPc.close).toHaveBeenCalled();
+      expect(createdPeerConnectionConfigs[1]).toEqual({
+        iceServers: [
+          {
+            urls: "turn:turn.cloudflare.com:3478?transport=udp",
+            username: "test-user",
+            credential: "test-token",
+          },
+          {
+            urls: "turn:turn.cloudflare.com:3478?transport=tcp",
+            username: "test-user",
+            credential: "test-token",
+          },
+          {
+            urls: "turns:turn.cloudflare.com:5349?transport=tcp",
+            username: "test-user",
+            credential: "test-token",
+          },
+        ],
+        iceTransportPolicy: "relay",
+      });
+    });
+
+    it("TURN 再試行後に failed 状態なら disconnected イベントを発火する", async () => {
+      const signaling = createMockSignaling();
+      const manager = new PeerConnectionManager(signaling, createMockEnv());
+      const onDisconnected = vi.fn();
+      manager.on("disconnected", onDisconnected);
+
+      await manager.createOffer();
+      const firstPc = latestMockPc;
+      firstPc.connectionState = "failed";
+      firstPc.onconnectionstatechange?.({} as Event);
+      await Promise.resolve();
+
+      const secondPc = latestMockPc;
+      secondPc.connectionState = "failed";
+      secondPc.onconnectionstatechange?.({} as Event);
 
       expect(onDisconnected).toHaveBeenCalledOnce();
-      expect(pc.close).toHaveBeenCalled();
+      expect(secondPc.close).toHaveBeenCalled();
     });
   });
 
