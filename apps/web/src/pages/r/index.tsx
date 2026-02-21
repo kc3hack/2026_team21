@@ -48,7 +48,7 @@ export const RoomPage = (props: Props) => {
   useEffect(() => {
     let isDisposed = false;
     const signaling = new SignalingClient(getSignalUrl(props.roomId));
-    const peerManager = new PeerConnectionManager(signaling);
+    const peerManager = new PeerConnectionManager(signaling, { forceTurn: true });
     const fileReceiver = new FileReceiver();
 
     const setStateIfActive = (update: () => void): void => {
@@ -172,7 +172,9 @@ export const RoomPage = (props: Props) => {
       } catch (error) {
         setStateIfActive(() => {
           setErrorMessage(`TURN資格情報の取得に失敗しました: ${String(error)}`);
+          setWsStatus("disconnected");
         });
+        return;
       }
 
       if (isDisposed) {

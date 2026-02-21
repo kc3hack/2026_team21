@@ -40,7 +40,7 @@ export const TopPage = () => {
     let sending = false;
     let hasSent = false;
     const signaling = new SignalingClient(getSignalUrl(roomId));
-    const peerManager = new PeerConnectionManager(signaling);
+    const peerManager = new PeerConnectionManager(signaling, { forceTurn: true });
 
     const setStateIfActive = (update: () => void): void => {
       if (isDisposed) {
@@ -172,7 +172,9 @@ export const TopPage = () => {
       } catch (error) {
         setStateIfActive(() => {
           setErrorMessage(`TURN資格情報の取得に失敗しました: ${String(error)}`);
+          setWsStatus("disconnected");
         });
+        return;
       }
 
       if (isDisposed) {
