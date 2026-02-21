@@ -2,6 +2,7 @@
 import { Hono } from "hono";
 import { css, Style } from "hono/css";
 import { useState } from "hono/jsx";
+import { useWebRTCConnection } from "@/hooks/useWebRTCConnection";
 import { Page } from "@/pages/router";
 import { LogoIcon } from "@/components/Logo";
 import { ArrivingOrangeGhost } from "@/components/animations/ArrivingOrangeGhost";
@@ -25,19 +26,42 @@ export const RoomPageRoute = () => {
   return app;
 };
 
-// ==========================================
-// 既存の RoomPage コンポーネント (維持)
-// ==========================================
-type Props = {
-  roomId: string;
-};
+type Props = { roomId: string };
 
 export const RoomPage = (props: Props) => {
+  const { wsStatus, peerStatus, peerRole, dataChannelStatus, receiveProgress, lastReceivedFile, errorMessage } =
+    useWebRTCConnection(props.roomId);
+
   return (
     <div>
       <h1>Room Page</h1>
       <p>ここにファイル送信のUIが入る予定</p>
       <p>Room ID: {props.roomId}</p>
+      <p>
+        WS Status: <strong>{wsStatus}</strong>
+      </p>
+      <p>
+        Peer Status: <strong>{peerStatus}</strong>
+      </p>
+      <p>
+        Role: <strong>{peerRole}</strong>
+      </p>
+      <p>
+        DataChannel Status: <strong>{dataChannelStatus}</strong>
+      </p>
+      <p>
+        Receive Progress: <strong>{receiveProgress}</strong>
+      </p>
+      {lastReceivedFile && (
+        <p>
+          Last Downloaded: <strong>{lastReceivedFile}</strong>
+        </p>
+      )}
+      {errorMessage && (
+        <p>
+          Error: <strong>{errorMessage}</strong>
+        </p>
+      )}
     </div>
   );
 };

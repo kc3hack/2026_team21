@@ -11,6 +11,12 @@
       }
     ]
   },
+  "kv_namespaces": [
+    {
+      "binding": "ROOM_MAPPING_KV",
+      "id": "91bce015488e42a3b4dee38b84a31ca7"
+    }
+  ],
   "migrations": [
     {
       "tag": "v1",
