@@ -10,12 +10,14 @@ const waveRight = keyframes`0%, 100% { transform: rotate(0deg); } 50% { transfor
 const waveLeft = keyframes`0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-40deg); }`;
 const slideInFromRight = keyframes`0% { right: -52%; } 100% { right: 4%; }`;
 const slideInFromRightMobile = keyframes`0% { right: -80%; } 100% { right: 50%; }`;
+const slideInFromLeft = keyframes`0% { right: 120%; } 100% { right: 0%; }`;
+const slideInFromLeftMobile = keyframes`0% { right: 170%; } 100% { right: 50%; }`;
 
 const ghostContainerClass = css`
   position: absolute;
   z-index: 40;
   bottom: 44px;
-  right: 4%;
+  right: 0%;
   transform: scale(0.45);
   transform-origin: bottom center;
   transition: right 1.5s cubic-bezier(0.5, 0, 0.2, 1);
@@ -33,6 +35,16 @@ const ghostContainerClass = css`
   @media (max-width: 600px) {
     &.is-entering {
       animation: ${slideInFromRightMobile} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
+    }
+  }
+
+  &.is-entering-left {
+    animation: ${slideInFromLeft} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
+  }
+
+  @media (max-width: 600px) {
+    &.is-entering-left {
+      animation: ${slideInFromLeftMobile} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
     }
   }
 
@@ -169,15 +181,23 @@ const ghostContainerClass = css`
   .eye-right {
     width: 8%;
     top: 32%;
-    left: 38%;
+    left: 37%;
     z-index: 20;
   }
 
   .eye-left {
     width: 8%;
     top: 32%;
-    right: 33%;
+    right: 37%;
     z-index: 20;
+  }
+
+  #ghost-eye-right {
+    left: 37% !important;
+  }
+
+  #ghost-eye-left {
+    right: 37% !important;
   }
 
   .sleep-eye,
@@ -193,14 +213,14 @@ const ghostContainerClass = css`
   .wake-eye-right {
     width: 10%;
     top: 35%;
-    left: 34%;
+    left: 34.5%;
   }
 
   .sleep-eye-left,
   .wake-eye-left {
     width: 10%;
     top: 35%;
-    right: 35%;
+    right: 34.5%;
   }
 
   .wake-eye-right,
@@ -210,11 +230,11 @@ const ghostContainerClass = css`
   }
 
   .wake-eye-left {
-    right: 34%;
+    right: 34.5%;
   }
 
   .wake-eye-right {
-    left: 34%;
+    left: 34.5%;
   }
 
   .arm-right {
@@ -252,6 +272,7 @@ type Props = {
   isSleeping?: boolean;
   showNotes?: boolean;
   enteringFromRight?: boolean;
+  enteringFromLeft?: boolean;
 };
 
 export const SlidingGhost = ({
@@ -259,12 +280,13 @@ export const SlidingGhost = ({
   isSleeping = false,
   showNotes = false,
   enteringFromRight = false,
+  enteringFromLeft = false,
 }: Props) => {
   const bodyId = "sliding-ghost-body";
   const isInteractive = !isMoving && !isSleeping;
   const className = `${ghostContainerClass} ${isMoving ? "is-moving" : ""} ${isSleeping ? "is-sleeping" : ""} ${
     enteringFromRight ? "is-entering" : ""
-  }`;
+  } ${enteringFromLeft ? "is-entering-left" : ""}`;
 
   return (
     <div class={className}>

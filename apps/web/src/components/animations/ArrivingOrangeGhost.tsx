@@ -7,16 +7,16 @@ import { InteractionController } from "./InteractionController";
 
 const float = keyframes`0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); }`;
 const shadowPulse = keyframes`0%, 100% { transform: scale(1); opacity: 0.25; } 50% { transform: scale(0.85); opacity: 0.1; }`;
-const slideIn = keyframes`0% { right: -100%; } 100% { right: 5%; }`;
+const slideIn = keyframes`0% { right: -100%; } 100% { right: -2%; }`;
 const waveRight = keyframes`0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(40deg); }`;
 const waveLeft = keyframes`0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-40deg); }`;
 
 const destContainerClass = css`
-  position: absolute; z-index: 10; bottom: 50px; right: 5%;
+  position: absolute; z-index: 10; bottom: 50px; right: -2%;
   transform: scale(0.45); transform-origin: bottom center;
   transition: right 1.5s cubic-bezier(0.5, 0, 0.2, 1);
 
-  @media (max-width: 600px) { right: 5%; transform: scale(0.4); bottom: 30px; }
+  @media (max-width: 600px) { right: -4%; transform: scale(0.4); bottom: 30px; }
 
   /* 登場：右からスライドイン */
   &.is-arriving { animation: ${slideIn} 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
@@ -34,14 +34,26 @@ const destContainerClass = css`
   &.is-moving-out #ghost-arm-right { transform: translateX(12rem) scaleX(-1) rotate(20deg) !important; }
   &.is-moving-out #ghost-arm-left { transform: translateX(2rem) translateY(-1rem) rotate(-30deg) !important; }
 
+  /* 退場：右へスライドアウト */
+  &.is-moving-out-right {
+    right: -120%;
+    pointer-events: none;
+    @media (max-width: 600px) { right: -160%; }
+  }
+  &.is-moving-out-right .ghost-tilter { transform: rotate(15deg); }
+  &.is-moving-out-right #ghost-arm-right { transform: translateX(-2rem) translateY(-1rem) rotate(30deg) !important; }
+  &.is-moving-out-right #ghost-arm-left { transform: translateX(-10rem) scaleX(-1) rotate(-20deg) !important; }
+
   /* 到着後：通常状態 */
-  &.has-arrived { right: 5%; }
+  &.has-arrived { right: -2%; }
   &.has-arrived .ghost-tilter { transform: rotate(0deg); transition: transform 0.4s ease-out; }
 
   .ghost-tilter { position: relative; display: flex; flex-direction: column; align-items: center; transform-origin: bottom center; }
   .ghost-body { position: relative; z-index: 10; width: 25rem; height: 30rem; animation: ${float} 3s ease-in-out infinite; cursor: pointer; }
   .ghost-eye { transition: transform 0.1s ease-out; }
   .ghost-part { position: absolute; object-fit: contain; pointer-events: none; }
+  #ghost-eye-right { left: 37% !important; }
+  #ghost-eye-left { right: 37% !important; }
   
   .cheek {
     position: absolute; width: 3.5rem; height: 1.5rem; background-color: #ffb6c1;
@@ -58,9 +70,10 @@ const destContainerClass = css`
 
 type Props = {
   isMoving: boolean; // index.tsx側から制御
+  moveOutDirection?: "left" | "right";
 };
 
-export const ArrivingOrangeGhost = ({ isMoving }: Props) => {
+export const ArrivingOrangeGhost = ({ isMoving, moveOutDirection = "left" }: Props) => {
   const [arrivingState, setArrivingState] = useState<"is-arriving" | "has-arrived">("is-arriving");
   const bodyId = "arriving-orange-body";
 
@@ -71,7 +84,11 @@ export const ArrivingOrangeGhost = ({ isMoving }: Props) => {
   }, []);
 
   // 退場中なら is-moving-out を、そうでなければ登場/待機状態を適用
-  const stateClass = isMoving ? "is-moving-out" : arrivingState;
+  const stateClass = isMoving
+    ? moveOutDirection === "right"
+      ? "is-moving-out-right"
+      : "is-moving-out"
+    : arrivingState;
 
   return (
     <div class={`${destContainerClass} ${stateClass}`}>

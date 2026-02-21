@@ -17,10 +17,66 @@ const responsiveWrapper = css`
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-bottom: 1.2rem;
 
   & .logo-area {
     position: relative;
     top: 0;
+  }
+
+  @media (max-width: 600px) {
+    min-height: 100dvh;
+    padding: 0 0.8rem calc(7.1rem + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+`;
+
+const topSectionClass = css`
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 120;
+`;
+
+const centerSectionClass = css`
+  z-index: 100;
+  text-align: center;
+  width: 100%;
+  max-width: 34rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  margin: 1rem 0;
+  box-sizing: border-box;
+
+  @media (max-width: 600px) {
+    max-width: 23rem;
+    padding: 0 0.4rem;
+    margin: 0.55rem 0;
+  }
+`;
+
+const spacerClass = css`
+  flex: 1;
+  width: 100%;
+
+  @media (max-width: 600px) {
+    min-height: 6rem;
+  }
+`;
+
+const receiveHeadingClass = css`
+  color: #f6ad49;
+  font-weight: 900;
+  font-size: 2rem;
+  margin: 0 0 2rem;
+
+  @media (max-width: 600px) {
+    font-size: 1.45rem;
+    margin-bottom: 1.1rem;
   }
 `;
 
@@ -84,6 +140,38 @@ const waitCardClass = css`
     color: #d85f39;
     font-size: 0.92rem;
     font-weight: 800;
+  }
+
+  @media (max-width: 600px) {
+    width: min(92vw, 20.5rem);
+    border-radius: 18px;
+    border-width: 4px;
+    padding: 1.05rem 0.9rem;
+
+    .wait-title {
+      font-size: 1.1rem;
+    }
+
+    .wait-body {
+      margin-top: 0.6rem;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .progress-shell {
+      margin-top: 0.8rem;
+      height: 0.8rem;
+    }
+
+    .progress-text {
+      margin-top: 0.45rem;
+      font-size: 0.82rem;
+    }
+
+    .file-text,
+    .error-text {
+      font-size: 0.8rem;
+    }
   }
 `;
 
@@ -173,22 +261,11 @@ export const RoomPage = ({ roomId }: Props) => {
     <div class={responsiveWrapper}>
       <Style />
 
-      <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: flex-start; z-index: 120;">
+      <div class={topSectionClass}>
         <LogoIcon />
       </div>
 
-      <div
-        style="
-          z-index: 100;
-          text-align: center;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 0 20px;
-          margin: 1rem 0;
-        "
-      >
+      <div class={centerSectionClass}>
         <div class={waitCardClass}>
           <h1 class="wait-title">ファイルを受け取っています</h1>
           <p class="wait-body">送信側からの転送完了まで、このままお待ちください。</p>
@@ -209,7 +286,7 @@ export const RoomPage = ({ roomId }: Props) => {
         </div>
       </div>
 
-      <div style="flex: 1; width: 100%;"></div>
+      <div class={spacerClass} />
 
       <ArrivingOrangeGhost isMoving={false} />
 
@@ -231,7 +308,7 @@ export const ReceivePage = () => {
   const handleSendClick = () => {
     setIsMoving(true);
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = "/?from=receive-back";
     }, 1500);
   };
 
@@ -267,37 +344,26 @@ export const ReceivePage = () => {
     <div class={responsiveWrapper}>
       <Style />
 
-      <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: flex-start; z-index: 120;">
+      <div class={topSectionClass}>
         <LogoIcon />
       </div>
 
-      <div
-        style="
-          z-index: 100;
-          text-align: center;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 0 20px;
-        "
-      >
-        <h1 style="color: #f6ad49; font-weight: 900; font-size: 2rem; margin-bottom: 2rem;">ファイルを受け取る</h1>
+      <div class={centerSectionClass}>
+        <h1 class={receiveHeadingClass}>ファイルを受け取る</h1>
 
-        <PinInputBlock onSubmit={handleSubmitPin} isSubmitting={isResolvingPin} errorMessage={pinError} />
+        <PinInputBlock
+          onSubmit={handleSubmitPin}
+          isSubmitting={isResolvingPin}
+          errorMessage={pinError}
+          helperMessage={"送信側で発行された6桁の番号を\n入力してください"}
+        />
 
         <SendBackButton onClick={handleSendClick} />
-
-        <p style="color: #5e7359; font-weight: bold; margin-top: 2rem; line-height: 1.65;">
-          送信側で発行された6桁の番号を
-          <br />
-          入力してください
-        </p>
       </div>
 
-      <div style="flex: 1; width: 100%;"></div>
+      <div class={spacerClass} />
 
-      <ArrivingOrangeGhost isMoving={isMoving} />
+      <ArrivingOrangeGhost isMoving={isMoving} moveOutDirection="right" />
     </div>
   );
 };

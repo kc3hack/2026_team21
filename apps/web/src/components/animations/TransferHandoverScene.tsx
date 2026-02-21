@@ -83,14 +83,14 @@ const handoverClass = css`
   .eye-right {
     width: 8%;
     top: 32%;
-    left: 38%;
+    left: 37%;
     z-index: 20;
   }
 
   .eye-left {
     width: 8%;
     top: 32%;
-    right: 33%;
+    right: 37%;
     z-index: 20;
   }
 
@@ -144,7 +144,7 @@ const handoverClass = css`
   .green-ghost {
     left: -48%;
     transform: scale(0.44);
-    transition: left 0.95s cubic-bezier(0.22, 0.9, 0.22, 1);
+    transition: left 1.55s cubic-bezier(0.2, 0.9, 0.22, 1);
   }
 
   .orange-ghost {
@@ -157,42 +157,42 @@ const handoverClass = css`
     position: absolute;
     width: 14rem;
     top: 45%;
-    right: -25%;
+    right: -20%;
     opacity: 0;
-    transform: translateY(16px) scale(0.8);
+    transform: translateY(18px) scale(0.8);
     z-index: 30;
   }
 
   &.is-active .green-ghost {
-    left: 14%;
+    left: 13%;
   }
 
   &.is-active .orange-ghost {
-    animation: ${orangeArrival} 0.8s cubic-bezier(0.24, 1, 0.38, 1) forwards;
+    animation: ${orangeArrival} 1.05s cubic-bezier(0.24, 1, 0.38, 1) forwards;
   }
 
   &.is-active .green-arm-left {
     transform: rotate(-73deg) translate(10px, 22px);
-    transition-delay: 0.95s;
+    transition-delay: 1.68s;
   }
 
   &.is-active .orange-arm-right {
     transform: rotate(58deg) translate(16px, -10px);
-    transition-delay: 1.2s;
+    transition-delay: 2.05s;
   }
 
   &.is-active .orange-arm-left {
     transform: rotate(-58deg) translate(-16px, -10px);
-    transition-delay: 1.2s;
+    transition-delay: 2.05s;
   }
 
   &.is-active .letter-item {
-    animation: ${letterAppear} 0.45s cubic-bezier(0.24, 1, 0.38, 1) 1.05s forwards;
+    animation: ${letterAppear} 0.65s cubic-bezier(0.24, 1, 0.38, 1) 1.95s forwards;
   }
 
   &.is-active .orange-ghost .cheek {
     opacity: 0.78;
-    transition-delay: 1.22s;
+    transition-delay: 2.14s;
   }
 
   @media (max-width: 600px) {
@@ -205,12 +205,12 @@ const handoverClass = css`
     }
 
     .orange-ghost {
-      right: 4%;
+      right: 2%;
       transform: translateX(40%) scale(0.34);
     }
 
     &.is-active .green-ghost {
-      left: -3%;
+      left: -2%;
     }
   }
 `;

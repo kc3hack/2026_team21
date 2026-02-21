@@ -94,15 +94,26 @@ const errorStyles = css`
   text-align: center;
 `;
 
+const helperTextStyles = css`
+  margin: -0.2rem 0 0;
+  color: #5e7359;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.65;
+  text-align: center;
+  white-space: pre-line;
+`;
+
 const PIN_INPUT_KEYS = ["pin-1", "pin-2", "pin-3", "pin-4", "pin-5", "pin-6"] as const;
 
 type Props = {
   onSubmit: (pin: string) => Promise<void> | void;
   isSubmitting?: boolean;
   errorMessage?: string;
+  helperMessage?: string;
 };
 
-export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "" }: Props) => {
+export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "", helperMessage = "" }: Props) => {
   const [digits, setDigits] = useState<string[]>(Array.from({ length: PIN_INPUT_KEYS.length }, () => ""));
   const inputRefs = useRef<Array<HTMLInputElement | null> | null>([]);
 
@@ -204,6 +215,8 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
       <button type="button" class={submitButtonStyles} onClick={handleSubmit} disabled={!canSubmit}>
         {isSubmitting ? "確認中..." : "受信する"}
       </button>
+
+      {helperMessage && <p class={helperTextStyles}>{helperMessage}</p>}
 
       {errorMessage && <p class={errorStyles}>{errorMessage}</p>}
     </div>

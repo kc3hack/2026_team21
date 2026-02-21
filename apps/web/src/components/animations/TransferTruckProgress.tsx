@@ -16,26 +16,13 @@ const truckProgressClass = css`
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 12.5rem;
+  height: 11.8rem;
   z-index: 30;
   pointer-events: none;
 
-  .progress-road {
-    position: absolute;
-    left: 0;
-    bottom: 2.6rem;
-    width: 100%;
-    height: 0.65rem;
-    background: repeating-linear-gradient(
-      90deg,
-      rgba(63, 81, 65, 0.3) 0 24px,
-      rgba(63, 81, 65, 0.12) 24px 48px
-    );
-  }
-
   .truck-anchor {
     position: absolute;
-    bottom: 2.2rem;
+    bottom: 2rem;
     transform: translateX(-50%) scale(0.52);
     transform-origin: bottom center;
     transition: left 0.25s linear;
@@ -127,11 +114,11 @@ const truckProgressClass = css`
   }
 
   @media (max-width: 600px) {
-    height: 9.8rem;
+    height: 8.9rem;
 
     .truck-anchor {
-      bottom: 1.8rem;
-      transform: translateX(-50%) scale(0.38);
+      bottom: 1.4rem;
+      transform: translateX(-50%) scale(0.34);
     }
 
     .progress-shell {
@@ -162,8 +149,6 @@ export const TransferTruckProgress = ({ progressPercent, active, exiting = false
 
   return (
     <div class={truckProgressClass} aria-hidden="true">
-      <div class="progress-road" />
-
       <div class={truckClass} style={`left: ${laneProgress}%;`}>
         <div class="track-wrapper">
           <TrackVehicleParts />

@@ -43,10 +43,54 @@ const responsiveWrapper = css`
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-bottom: 1.2rem;
 
   & .logo-area {
     position: relative;
     top: 0;
+  }
+
+  @media (max-width: 600px) {
+    min-height: 100dvh;
+    padding: 0 0.8rem calc(6.8rem + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+`;
+
+const topSectionClass = css`
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 120;
+`;
+
+const centerSectionClass = css`
+  z-index: 100;
+  text-align: center;
+  width: 100%;
+  max-width: 34rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  margin: 1rem 0;
+  box-sizing: border-box;
+
+  @media (max-width: 600px) {
+    max-width: 22rem;
+    padding: 0 0.4rem;
+    margin: 0.6rem 0;
+  }
+`;
+
+const spacerClass = css`
+  flex: 1;
+  width: 100%;
+
+  @media (max-width: 600px) {
+    min-height: 5.5rem;
   }
 `;
 
@@ -57,6 +101,12 @@ const stageTextClass = css`
   font-weight: 900;
   text-align: center;
   line-height: 1.55;
+
+  @media (max-width: 600px) {
+    margin-top: 0.7rem;
+    font-size: 0.94rem;
+    line-height: 1.45;
+  }
 `;
 
 const errorTextClass = css`
@@ -65,6 +115,11 @@ const errorTextClass = css`
   font-size: 0.95rem;
   font-weight: 800;
   text-align: center;
+
+  @media (max-width: 600px) {
+    margin-top: 0.7rem;
+    font-size: 0.86rem;
+  }
 `;
 
 const qrModalClass = css`
@@ -121,6 +176,30 @@ const qrModalClass = css`
     padding: 0.55rem 1.4rem;
     cursor: pointer;
   }
+
+  @media (max-width: 600px) {
+    width: min(92vw, 20rem);
+    padding: 1.2rem 1rem;
+    border-width: 5px;
+    border-radius: 18px;
+
+    .qr-title {
+      font-size: 1.08rem;
+    }
+
+    .qr-help {
+      font-size: 0.84rem;
+      margin: 0.65rem 0 0.55rem;
+      line-height: 1.45;
+    }
+
+    .shortcode {
+      font-size: 1.28rem;
+      min-width: 7.4rem;
+      padding: 0.35rem 0.9rem;
+      margin-top: 0.65rem;
+    }
+  }
 `;
 
 export const TopPage = () => {
@@ -142,16 +221,26 @@ export const TopPage = () => {
   const [flowStage, setFlowStage] = useState<SenderFlowStage>("idle");
   const [isNavigatingToReceive, setIsNavigatingToReceive] = useState(false);
   const [isEnteringFromRight, setIsEnteringFromRight] = useState(false);
+  const [isEnteringFromLeft, setIsEnteringFromLeft] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("from") !== "complete") {
+    const from = params.get("from");
+    if (!from) {
       return;
     }
 
-    setIsEnteringFromRight(true);
+    if (from === "complete") {
+      setIsEnteringFromRight(true);
+    } else if (from === "receive-back") {
+      setIsEnteringFromLeft(true);
+    } else {
+      return;
+    }
+
     const timer = setTimeout(() => {
       setIsEnteringFromRight(false);
+      setIsEnteringFromLeft(false);
     }, 1300);
 
     params.delete("from");
@@ -177,7 +266,7 @@ export const TopPage = () => {
     setFlowStage("handover");
     const timer = setTimeout(() => {
       setFlowStage("completed");
-    }, 2200);
+    }, 3900);
 
     return () => clearTimeout(timer);
   }, [flowStage, lastSentFile]);
@@ -217,7 +306,7 @@ export const TopPage = () => {
   };
 
   const sendProgressPercent = lastSentFile ? 100 : parseProgressPercent(sendProgress);
-  const showSenderGhost = !isNavigatingToReceive && flowStage !== "handover" && flowStage !== "completed";
+  const showSenderGhost = flowStage !== "handover" && flowStage !== "completed";
   const showTruck = flowStage === "transferring" || flowStage === "handover";
   const ghostIsSleeping = flowStage === "qr";
   const ghostIsMoving = flowStage === "transferring" || isNavigatingToReceive;
@@ -235,32 +324,12 @@ export const TopPage = () => {
     <div class={responsiveWrapper}>
       <Style />
 
-      <div
-        style="
-          flex: 1;
-          width: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          z-index: 120;
-        "
-      >
+      <div class={topSectionClass}>
         <LogoIcon />
       </div>
 
-      <div
-        style="
-          z-index: 100;
-          text-align: center;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 0 20px;
-          margin: 1rem 0;
-        "
-      >
-        {flowStage === "idle" && (
+      <div class={centerSectionClass}>
+        {flowStage === "idle" && !isNavigatingToReceive && (
           <>
             <FileSelectArea onSelect={handleClickSelect} />
             <ReceiveButton onClick={handleReceiveClick} />
@@ -280,7 +349,7 @@ export const TopPage = () => {
         />
       </div>
 
-      <div style="flex: 1; width: 100%;"></div>
+      <div class={spacerClass} />
 
       {showSenderGhost && (
         <SlidingGhost
@@ -288,6 +357,7 @@ export const TopPage = () => {
           isSleeping={ghostIsSleeping}
           showNotes={showGhostNotes}
           enteringFromRight={isEnteringFromRight}
+          enteringFromLeft={isEnteringFromLeft}
         />
       )}
 
