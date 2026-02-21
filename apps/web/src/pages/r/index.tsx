@@ -1,8 +1,14 @@
 import { Hono } from "hono";
+import { generateSnowflakeId } from "@/lib/snowflake";
 import { Layout } from "@/pages/layout";
 import { RoomClient } from "./RoomClient";
 
 const app = new Hono();
+
+app.post("/", async (c) => {
+  const id = generateSnowflakeId();
+  return c.json({ id });
+});
 
 app.post("/:roomId", async (c) => {
   const formData = await c.req.formData();

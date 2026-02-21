@@ -2,7 +2,6 @@ export const HomeClient = () => {
   return (
     <main class="home-container">
       <div class="logo-area">
-        {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
         <img src="/images/logo.PNG" alt="Gost" class="logo-img" />
       </div>
 
@@ -12,22 +11,16 @@ export const HomeClient = () => {
           <div class="ghost-body" id="ghost-character">
             <div class="exclamation-mark">!</div>
 
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img src="/images/home/body.svg" alt="body" class="ghost-part" />
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img src="/images/home/head.svg" alt="head" class="ghost-part" />
 
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-arm-right" src="/images/home/right.svg" alt="right" class="ghost-part" />
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-arm-left" src="/images/home/left.svg" alt="left" class="ghost-part" />
 
             <div class="cheek cheek-left" />
             <div class="cheek cheek-right" />
 
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-eye-right" src="/images/home/right_eye.svg" alt="right_eye" class="ghost-part ghost-eye" />
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-eye-left" src="/images/home/left_eye.svg" alt="left_eye" class="ghost-part ghost-eye" />
           </div>
           <div class="ghost-shadow" />
@@ -44,7 +37,7 @@ export const HomeClient = () => {
       {/* QRコード表示エリア */}
       <div id="qr-container" class="qr-container">
         <p class="qr-text">相手にQRを読み取らせてください</p>
-        <div class="qr-mock-box">QRコード(仮)</div>
+        <div class="qr-image-canvas" id="qr-image-canvas"></div>
         <a href="/room/test1234" class="mock-qr-btn">
           【テスト】QRを読んだことにして進む
         </a>

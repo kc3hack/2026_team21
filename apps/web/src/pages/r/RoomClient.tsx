@@ -2,7 +2,6 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
   return (
     <main class="home-container">
       <div class="logo-area">
-        {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
         <img src="/images/logo.PNG" alt="Gost" class="logo-img" />
       </div>
 
@@ -12,15 +11,11 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
           <div class="ghost-body" id="ghost-character">
             <div class="exclamation-mark">!</div>
 
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img src="/images/home/body.svg" alt="body" class="ghost-part" />
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img src="/images/home/head.svg" alt="head" class="ghost-part" />
 
             {/* 腕パーツ */}
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-arm-right" src="/images/home/right.svg" alt="right" class="ghost-part" />
-            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-arm-left" src="/images/home/left.svg" alt="left" class="ghost-part" />
 
             <div class="cheek cheek-left" />
@@ -60,7 +55,7 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
         </form>
       </div>
 
-      {/* ▼ Viteの機能を使ってTSファイルを直接ブラウザで読み込む ▼ */}
+      {/* Viteの機能を使ってTSファイルを直接ブラウザで読み込む */}
       <script type="module" src="/src/pages/r/room.client.ts"></script>
     </main>
   );

@@ -1,3 +1,17 @@
+import { createQRCode } from "@/lib/qrcode";
+
+const fetchSnowflakeId = async () => {
+  const response = await fetch("/room", {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch snowflake ID");
+  }
+  const data: { id: string } = await response.json();
+
+  return data.id;
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   const ghostBody = document.getElementById("ghost-character");
   const eyeRight = document.getElementById("ghost-eye-right");
@@ -49,11 +63,24 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   let isWaiting = false;
-  btn?.addEventListener("click", () => {
+  btn?.addEventListener("click", async () => {
     if (isWaiting) return;
     isWaiting = true;
+
     btn.textContent = "待機中...";
     playNotice();
     qrContainer?.classList.add("is-visible");
+
+    try {
+      const id = await fetchSnowflakeId();
+      const qrcode = createQRCode(`${location.origin}/r/${id}`);
+      const imageElement = document.getElementById("qr-image-canvas");
+      if (imageElement) {
+        qrcode.append(imageElement);
+      }
+    } catch (error) {
+      console.error(error);
+      btn.textContent = "ルームの作成に失敗しました";
+    }
   });
 });
