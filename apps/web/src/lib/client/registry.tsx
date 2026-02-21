@@ -9,10 +9,7 @@ const componentRegistry: { [K in ComponentId]?: Component<K> } = {};
  * @param component Client ComponentのReactコンポーネント
  */
 export function registerComponent<T extends ComponentId>(id: T, component: Component<T>) {
-  if (componentRegistry[id]) {
-    throw new Error(`Component with id "${id}" is already registered.`);
-  }
-  componentRegistry[id] = component;
+  if (!componentRegistry[id]) componentRegistry[id] = component;
 }
 
 /**
