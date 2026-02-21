@@ -18,10 +18,18 @@ const components = {
 
 export type ComponentId = keyof typeof components;
 export type ComponentProps<T extends ComponentId> = Parameters<(typeof components)[T]>[0];
+export type ComponentType<T extends ComponentId> = ReturnType<(typeof components)[T]>;
+export type Component<T extends ComponentId> = (typeof components)[T];
+
+const isComponentId = (id: string): id is ComponentId => {
+  return id in components;
+};
 
 Object.entries(components).forEach(([id, Component]) => {
-  // biome-ignore lint/suspicious/noExplicitAny: 異なる型のコンポーネントを登録するため
-  registerComponent(id as ComponentId, Component as any);
+  if (!isComponentId(id)) {
+    throw new Error(`Invalid component ID: ${id}`);
+  }
+  registerComponent(id, Component);
 });
 
 /**

@@ -1,21 +1,18 @@
-import type { FC } from "hono/jsx";
 import { render } from "hono/jsx/dom";
-import type { ComponentId } from "@/pages/router";
+import type { Component, ComponentId } from "@/pages/router";
 
 /**
  * Client Componentのレジストリ
  * ここにClient Componentを登録しておくと、自動的にマウントされます
  */
-// biome-ignore lint/suspicious/noExplicitAny: レジストリは複数の異なる型のコンポーネントを保持するため
-const componentRegistry: Record<string, FC<any>> = {};
+const componentRegistry: { [K in ComponentId]?: Component<K> } = {};
 
 /**
  * Client Componentを登録する関数
  * @param id Client ComponentのID
  * @param component Client ComponentのReactコンポーネント
  */
-// biome-ignore lint/suspicious/noExplicitAny: レジストリは複数の異なる型のコンポーネントを保持するため
-export function registerComponent(id: ComponentId, component: FC<any>) {
+export function registerComponent<T extends ComponentId>(id: T, component: Component<T>) {
   componentRegistry[id] = component;
 }
 
