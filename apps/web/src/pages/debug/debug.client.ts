@@ -1,10 +1,10 @@
 import { FileReceiver, sendFile } from "@/lib/realtime/file-transfer";
-import { PeerConnectionManager } from "@/lib/realtime/peer-connection";
+import { PeerConnectionManager, type TurnIceServerConfig } from "@/lib/realtime/peer-connection";
 import { SignalingClient } from "@/lib/realtime/signaling-client";
 
 type DebugElements = {
-  page: HTMLElement;
   roomInput: HTMLInputElement;
+  forceTurnCheckbox: HTMLInputElement;
   connectBtn: HTMLButtonElement;
   disconnectBtn: HTMLButtonElement;
   sendFileBtn: HTMLButtonElement;
@@ -20,6 +20,10 @@ type DebugElements = {
   logOutput: HTMLElement;
 };
 
+type TurnCredentialResponse = {
+  iceServers: TurnIceServerConfig;
+};
+
 const getElement = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
   if (!element) {
@@ -29,8 +33,8 @@ const getElement = <T extends HTMLElement>(id: string): T => {
 };
 
 const getElements = (): DebugElements => ({
-  page: getElement<HTMLElement>("realtime-debug-page"),
   roomInput: getElement<HTMLInputElement>("room-id"),
+  forceTurnCheckbox: getElement<HTMLInputElement>("force-turn"),
   connectBtn: getElement<HTMLButtonElement>("connect-btn"),
   disconnectBtn: getElement<HTMLButtonElement>("disconnect-btn"),
   sendFileBtn: getElement<HTMLButtonElement>("send-file-btn"),
@@ -59,6 +63,48 @@ const getSignalUrl = (roomId: string): string => {
   return `${protocol}//${location.host}/api/ws/${encodeURIComponent(roomId)}`;
 };
 
+const isTurnCredentialResponse = (value: unknown): value is TurnCredentialResponse => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const iceServers = (value as { iceServers?: unknown }).iceServers;
+  if (typeof iceServers !== "object" || iceServers === null) {
+    return false;
+  }
+
+  const record = iceServers as {
+    urls?: unknown;
+    username?: unknown;
+    credential?: unknown;
+  };
+
+  const urlsValid =
+    (typeof record.urls === "string" && record.urls.length > 0) ||
+    (Array.isArray(record.urls) && record.urls.every((url) => typeof url === "string"));
+
+  return urlsValid && typeof record.username === "string" && typeof record.credential === "string";
+};
+
+const fetchTurnIceServer = async (): Promise<TurnIceServerConfig> => {
+  const response = await fetch("/api/turn/credentials", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ttl: 86_400 }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`TURN credentials request failed: HTTP ${response.status}`);
+  }
+
+  const payload = (await response.json()) as unknown;
+  if (!isTurnCredentialResponse(payload)) {
+    throw new Error("TURN credentials response is invalid");
+  }
+  return payload.iceServers;
+};
+
 const addReceivedFile = (list: HTMLUListElement, name: string, file: Blob): void => {
   const url = URL.createObjectURL(file);
   const item = document.createElement("li");
@@ -72,18 +118,12 @@ const addReceivedFile = (list: HTMLUListElement, name: string, file: Blob): void
 
 const init = (): void => {
   const elements = getElements();
-  const { page } = elements;
-  const turnUsername = page.dataset.turnUsername ?? "";
-  const turnCredential = page.dataset.turnCredential ?? "";
-  const rtcEnv = {
-    CF_TURN_USERNAME: turnUsername,
-    CF_TURN_TOKEN: turnCredential,
-  } as unknown as CloudflareBindings;
 
   let signaling: SignalingClient | null = null;
   let peerManager: PeerConnectionManager | null = null;
   let fileReceiver: FileReceiver | null = null;
   let sending = false;
+  let connectAttempt = 0;
 
   const setWsStatus = (next: string): void => {
     elements.wsStatus.textContent = next;
@@ -117,7 +157,10 @@ const init = (): void => {
     resetProgress();
   };
 
-  const disconnect = (): void => {
+  const disconnect = (invalidatePendingConnect = true): void => {
+    if (invalidatePendingConnect) {
+      connectAttempt += 1;
+    }
     signaling?.disconnect();
     signaling = null;
     setWsStatus("disconnected");
@@ -139,18 +182,51 @@ const init = (): void => {
     fileReceiver = receiver;
   };
 
-  const connect = (): void => {
+  const connect = async (): Promise<void> => {
     const roomId = elements.roomInput.value.trim();
+    const forceTurn = elements.forceTurnCheckbox.checked;
     if (!roomId) {
       appendLog(elements.logOutput, "connect-failed", "roomId is required");
       return;
     }
 
-    disconnect();
+    const attemptId = connectAttempt + 1;
+    connectAttempt = attemptId;
+    disconnect(false);
 
     const signalUrl = getSignalUrl(roomId);
     const client = new SignalingClient(signalUrl);
-    const manager = new PeerConnectionManager(client, rtcEnv);
+    const manager = new PeerConnectionManager(client, { forceTurn });
+    appendLog(elements.logOutput, "ice-mode", forceTurn ? "force-turn" : "stun-then-turn");
+    try {
+      const turnIceServer = await fetchTurnIceServer();
+      if (attemptId !== connectAttempt) {
+        manager.cleanup();
+        client.disconnect();
+        return;
+      }
+      manager.setTurnIceServer(turnIceServer);
+      appendLog(elements.logOutput, "turn-config-loaded", { urls: turnIceServer.urls });
+    } catch (error) {
+      if (attemptId !== connectAttempt) {
+        manager.cleanup();
+        client.disconnect();
+        return;
+      }
+      appendLog(elements.logOutput, "turn-config-error", String(error));
+      if (forceTurn) {
+        appendLog(elements.logOutput, "connect-failed", "force-turn is enabled but TURN credentials are unavailable");
+        manager.cleanup();
+        client.disconnect();
+        return;
+      }
+    }
+
+    if (attemptId !== connectAttempt) {
+      manager.cleanup();
+      client.disconnect();
+      return;
+    }
 
     client.on("connected", () => {
       setWsStatus("connected");
@@ -269,8 +345,12 @@ const init = (): void => {
     }
   };
 
-  elements.connectBtn.addEventListener("click", connect);
-  elements.disconnectBtn.addEventListener("click", disconnect);
+  elements.connectBtn.addEventListener("click", () => {
+    void connect();
+  });
+  elements.disconnectBtn.addEventListener("click", () => {
+    disconnect();
+  });
   elements.sendFileBtn.addEventListener("click", () => {
     void sendSelectedFile();
   });
@@ -281,10 +361,6 @@ const init = (): void => {
   const roomFromQuery = new URLSearchParams(location.search).get("room");
   if (roomFromQuery) {
     elements.roomInput.value = roomFromQuery;
-  }
-
-  if (!turnUsername || !turnCredential) {
-    appendLog(elements.logOutput, "turn-config-missing", "CF_TURN_USERNAME / CF_TURN_TOKEN");
   }
 
   setWsStatus("disconnected");

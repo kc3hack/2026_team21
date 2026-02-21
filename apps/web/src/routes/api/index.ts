@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { WorkerEnv } from "@/app";
+import { generateCloudflareTurnCredentials } from "@/lib/cloudflare-turn";
 import { generateSnowflakeId } from "@/lib/snowflake";
 
 const app = new Hono<WorkerEnv>();
@@ -14,6 +15,22 @@ app.get("/ws/:roomId", (c) => {
 app.post("/rooms", (c) => {
   const id = generateSnowflakeId();
   return c.json({ id });
+});
+
+app.post("/turn/credentials", async (c) => {
+  let ttl: number | undefined;
+  const body = await c.req.json<{ ttl?: unknown }>().catch(() => null);
+  if (typeof body?.ttl === "number" && Number.isFinite(body.ttl) && body.ttl > 0) {
+    ttl = body.ttl;
+  }
+
+  try {
+    const credentials = await generateCloudflareTurnCredentials(c.env, { ttl });
+    return c.json(credentials);
+  } catch (error) {
+    console.error("Failed to generate TURN credentials:", error);
+    return c.json({ error: "Failed to generate TURN credentials" }, 500);
+  }
 });
 
 app.post("/rooms/:roomId/upload", async (c) => {
