@@ -17,7 +17,7 @@ export type PeerEventMap = {
 export class PeerConnectionManager {
   private pc: RTCPeerConnection | null = null;
   private dataChannel: RTCDataChannel | null = null;
-  private listeners = new Map<string, Set<(...args: unknown[]) => void>>();
+  private listeners = new Map<keyof PeerEventMap, Set<(...args: never[]) => void>>();
   private makingOffer = false;
 
   constructor(private readonly signaling: SignalingClient) {
@@ -156,16 +156,17 @@ export class PeerConnectionManager {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)?.add(callback as (...args: unknown[]) => void);
+    this.listeners.get(event)?.add(callback as (...args: never[]) => void);
   }
 
   off<K extends keyof PeerEventMap>(event: K, callback: PeerEventMap[K]): void {
-    this.listeners.get(event)?.delete(callback as (...args: unknown[]) => void);
+    this.listeners.get(event)?.delete(callback as (...args: never[]) => void);
   }
 
-  private emit(event: string, ...args: unknown[]): void {
+  private emit<K extends keyof PeerEventMap>(event: K, ...args: Parameters<PeerEventMap[K]>): void {
     for (const callback of this.listeners.get(event) ?? []) {
-      callback(...args);
+      // biome-ignore lint/suspicious/noExplicitAny: 型安全は emit のシグネチャで保証される
+      (callback as (...a: any[]) => void)(...args);
     }
   }
 }
