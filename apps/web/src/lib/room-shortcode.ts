@@ -9,7 +9,6 @@ const MAX_RETRIES = 10; // 重複時の最大リトライ回数
 /**
  * 6桁のランダムな数字を生成。
  * 生成時点では衝突の可能性があることに注意すること。
- * Math.random() で偏りがあるが、用途が短期間かつリトライがあるので許容する。
  */
 function generateSixDigitCode(): string {
   const min = 100000;
