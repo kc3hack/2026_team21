@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { Layout } from "@/pages/layout";
+import { Layout } from "./layout";
 import { GhostMoveTest } from "./GhostMoveTest";
 import { HandoverTest } from "./HandoverTest";
 import { TrackMoveTest } from "./TrackMoveTest";

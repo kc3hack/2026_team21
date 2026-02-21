@@ -1,5 +1,3 @@
-// 緑キャラ左へ走って、1.5秒後に受け取り側へリダイレクト(ここの場合/test2)
-
 import { css, keyframes, Style } from "hono/css";
 import { GhostParts } from "./GhostParts";
 
@@ -49,11 +47,7 @@ export const GhostMoveTest = () => {
       <Style />
       <div style="padding: 20px; display: flex; gap: 10px; position: relative; z-index: 9999;">
         {/* ボタン押下で source.client.ts の処理を発火 */}
-        <button
-          id="source-start-btn"
-          type="button"
-          style="background: #758e6f; color: white; border: none; border-radius: 4px; font-size: 1rem; padding: 10px 20px; cursor: pointer;"
-        >
+        <button id="source-start-btn" type="button" style="background: #758e6f; color: white; border: none; border-radius: 4px; font-size: 1rem; padding: 10px 20px; cursor: pointer;">
           転送開始（別ページへ遷移）
         </button>
       </div>
@@ -67,7 +61,7 @@ export const GhostMoveTest = () => {
         </div>
       </div>
 
-      {/* 遷移用のクライアントスクリプトを再利用 */}
+      {/* 以前作った遷移用のクライアントスクリプトを再利用 */}
       <script type="module" src="/src/pages/test/source.client.ts"></script>
     </div>
   );
