@@ -66,9 +66,7 @@ export const RoomPage = (props: Props) => {
   );
 };
 
-// ==========================================
 // 追加：受信トップページ ( /r )
-// ==========================================
 export const ReceivePage = () => {
   const [isMoving, setIsMoving] = useState(false); // オレンジお化けの退場状態
 
