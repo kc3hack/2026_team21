@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { generateSnowflakeId } from "@/lib/snowflake";
 import { Layout } from "@/pages/layout";
 import { RoomPage } from "@/pages/r";
 import { renderer } from "@/pages/renderer";
@@ -12,35 +11,40 @@ app.get("/", (c) => {
   return c.render(
     <Layout>
       <main class="home-container">
-
         <div class="logo-area">
+          {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
           <img src="/images/logo.PNG" alt="Gost" class="logo-img" />
         </div>
 
         {/* キャラクター パーツ */}
         <div class="ghost-area">
           <div class="ghost-body" id="ghost-character">
+            <div class="exclamation-mark">!</div>
 
-          <div class="exclamation-mark">!</div>
-            
             {/* SVGパーツ群 */}
+            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img src="/images/home/body.svg" alt="body" class="ghost-part" />
+            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img src="/images/home/head.svg" alt="head" class="ghost-part" />
-            
-            {/* 腕パーツ アニメーション用にIDを付与*/}
+
+            {/* 腕パーツ */}
+            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-arm-right" src="/images/home/right.svg" alt="right" class="ghost-part" />
+            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-arm-left" src="/images/home/left.svg" alt="left" class="ghost-part" />
 
-            {/* クリックアニメーション時のやつ */}
-            <div class="cheek cheek-left"></div>
-            <div class="cheek cheek-right"></div>
+            {/* チーク */}
+            <div class="cheek cheek-left" />
+            <div class="cheek cheek-right" />
 
             {/* 目パーツ */}
+            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-eye-right" src="/images/home/right_eye.svg" alt="right_eye" class="ghost-part ghost-eye" />
+            {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
             <img id="ghost-eye-left" src="/images/home/left_eye.svg" alt="left_eye" class="ghost-part ghost-eye" />
           </div>
 
-          <div class="ghost-shadow"></div>
+          <div class="ghost-shadow" />
         </div>
 
         {/* ボタン */}
@@ -49,9 +53,12 @@ app.get("/", (c) => {
             ROOM 作成
           </button>
         </div>
-        
+
         {/* インタラクション */}
-        <script dangerouslySetInnerHTML={{ __html: `
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Required for client side script
+          dangerouslySetInnerHTML={{
+            __html: `
           document.addEventListener("DOMContentLoaded", () => {
             const ghostBody = document.getElementById('ghost-character');
             const eyeRight = document.getElementById('ghost-eye-right');
@@ -62,13 +69,12 @@ app.get("/", (c) => {
 
             const playNotice = () => {
               ghostBody.classList.remove('is-noticing');
-              void ghostBody.offsetWidth; // アニメーションをリセット
+              void ghostBody.offsetWidth;
               ghostBody.classList.add('is-noticing');
             };
 
             playNotice();
 
-            //視線追従
             document.addEventListener('mousemove', (e) => {
               if (!ghostBody || !eyeRight || !eyeLeft) return;
               const rect = ghostBody.getBoundingClientRect();
@@ -95,7 +101,6 @@ app.get("/", (c) => {
               armRight.classList.add('is-waving-right');
               armLeft.classList.add('is-waving-left');
 
-              // 約1.2秒後に赤面と腕振りを元に戻す
               setTimeout(() => {
                 ghostBody.classList.remove('is-blushing');
                 armRight.classList.remove('is-waving-right');
@@ -109,26 +114,20 @@ app.get("/", (c) => {
               if (isWaiting) return; // 連打防止
               isWaiting = true;
 
-              // ボタンの文字を変える
               btn.textContent = '待機中...';
 
-              // ボタンを押した瞬間に！を出す
               playNotice();
             });
             
           });
-        `}} />
-
+        `,
+          }}
+        />
       </main>
-    </Layout>
+    </Layout>,
   );
 });
 
-app.get("/new", (c) => {
-  const roomId = generateSnowflakeId();
-  return c.redirect(`/r/${roomId}`, 302);
-});
-
-app.route("/r", RoomPage);
+app.route("/room", RoomPage);
 
 export default app;
