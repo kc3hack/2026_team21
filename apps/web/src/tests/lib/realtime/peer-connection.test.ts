@@ -106,6 +106,7 @@ describe("PeerConnectionManager", () => {
       expect(signaling.on).toHaveBeenCalledWith("answer", expect.any(Function));
       expect(signaling.on).toHaveBeenCalledWith("candidate", expect.any(Function));
       expect(signaling.on).toHaveBeenCalledWith("peer-left", expect.any(Function));
+      expect(signaling.on).toHaveBeenCalledWith("disconnected", expect.any(Function));
     });
   });
 
@@ -137,6 +138,23 @@ describe("PeerConnectionManager", () => {
 
       expect(firstPc.close).toHaveBeenCalled();
     });
+
+    it("offer 作成に失敗したらクリーンアップする", async () => {
+      class FailingOfferRTCPeerConnection extends MockRTCPeerConnection {
+        setLocalDescription = vi.fn(async () => {
+          throw new Error("setLocalDescription failed");
+        });
+      }
+      vi.stubGlobal("RTCPeerConnection", FailingOfferRTCPeerConnection);
+
+      const signaling = createMockSignaling();
+      const manager = new PeerConnectionManager(signaling);
+
+      await expect(manager.createOffer()).rejects.toThrow("setLocalDescription failed");
+      const failedPc = latestMockPc;
+      expect(failedPc.close).toHaveBeenCalled();
+      expect(manager.getDataChannel()).toBeNull();
+    });
   });
 
   describe("handleOffer (via signaling)", () => {
@@ -157,6 +175,25 @@ describe("PeerConnectionManager", () => {
         type: "answer",
         sdp: "answer-sdp",
       });
+    });
+
+    it("offer 処理に失敗したらクリーンアップする", async () => {
+      class FailingAnswerRTCPeerConnection extends MockRTCPeerConnection {
+        setRemoteDescription = vi.fn(async () => {
+          throw new Error("setRemoteDescription failed");
+        });
+      }
+      vi.stubGlobal("RTCPeerConnection", FailingAnswerRTCPeerConnection);
+
+      const signaling = createMockSignaling();
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+      new PeerConnectionManager(signaling);
+
+      await signaling._trigger("offer", "broken-offer");
+
+      const pc = latestMockPc;
+      expect(pc.close).toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalled();
     });
   });
 
@@ -219,6 +256,23 @@ describe("PeerConnectionManager", () => {
       const pc = latestMockPc;
 
       await signaling._trigger("peer-left");
+
+      expect(pc.close).toHaveBeenCalled();
+      expect(onDisconnected).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe("signaling disconnected", () => {
+    it("disconnected 受信時にクリーンアップして disconnected を発火する", async () => {
+      const signaling = createMockSignaling();
+      const manager = new PeerConnectionManager(signaling);
+      const onDisconnected = vi.fn();
+      manager.on("disconnected", onDisconnected);
+
+      await manager.createOffer();
+      const pc = latestMockPc;
+
+      await signaling._trigger("disconnected");
 
       expect(pc.close).toHaveBeenCalled();
       expect(onDisconnected).toHaveBeenCalledOnce();
@@ -331,6 +385,7 @@ describe("PeerConnectionManager", () => {
       pc.onconnectionstatechange?.({} as Event);
 
       expect(onDisconnected).toHaveBeenCalledOnce();
+      expect(pc.close).toHaveBeenCalled();
     });
 
     it("failed 状態になると disconnected イベントを発火する", async () => {
@@ -345,6 +400,7 @@ describe("PeerConnectionManager", () => {
       pc.onconnectionstatechange?.({} as Event);
 
       expect(onDisconnected).toHaveBeenCalledOnce();
+      expect(pc.close).toHaveBeenCalled();
     });
   });
 
