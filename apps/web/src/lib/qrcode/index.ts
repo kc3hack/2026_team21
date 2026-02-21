@@ -1,17 +1,17 @@
-import QRCodeStyling from "qr-code-styling";
+import type { Options } from "qr-code-styling";
 
 /**
- * QRコードを生成する関数。
+ * QRコードのオプションを生成する関数。
  * スタイルについてはドキュメントを参照すること。
  *
  * @see https://github.com/kozakdenys/qr-code-styling
  * @param text QRコードに埋め込むテキスト
- * @returns {QRCodeStyling} 生成された QRコードオブジェクト
+ * @returns QRコードのオプション
  */
-export const createQRCode = (text: string) => {
+export const createQRCodeOptions = (text: string): Options => {
   // TODO: text の内容を検証する
 
-  return new QRCodeStyling({
+  return {
     type: "canvas",
     shape: "square",
     width: 300,
@@ -48,5 +48,5 @@ export const createQRCode = (text: string) => {
       type: "extra-rounded",
       color: "#5E7359",
     },
-  });
+  };
 };

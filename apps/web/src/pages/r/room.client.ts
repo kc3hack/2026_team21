@@ -1,5 +1,6 @@
 // apps/web/src/pages/r/room.client.ts
-import { createQRCode } from "../../lib/qrcode/index";
+import QRCodeStyling from "qr-code-styling";
+import { createQRCodeOptions } from "../../lib/qrcode/index";
 
 document.addEventListener("DOMContentLoaded", () => {
   const ghostArea = document.getElementById("ghost-area");
@@ -44,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === 1. ページ読み込み時の処理（QRコードの生成と表示） ===
   const roomUrl = window.location.href; // 現在のルームURLを取得
-  const qrCode = createQRCode(roomUrl);
+  const qrCode = new QRCodeStyling(createQRCodeOptions(roomUrl));
   if (qrImageCanvas) {
     qrCode.append(qrImageCanvas);
   }
