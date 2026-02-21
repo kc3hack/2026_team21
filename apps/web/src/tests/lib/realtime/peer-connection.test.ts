@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PeerConnectionManager, type TurnIceServerConfig } from "@/lib/realtime/peer-connection";
 import type { SignalingClient } from "@/lib/realtime/signaling-client";
 
+const MOCK_STUN_URL = "stun:stun.example.com:3478";
+
 /* ── Mock RTCDataChannel ── */
 function createMockDataChannel(label = "file-transfer"): RTCDataChannel {
   return {
@@ -21,12 +23,19 @@ function createMockDataChannel(label = "file-transfer"): RTCDataChannel {
 function createMockTurnIceServer(): TurnIceServerConfig {
   return {
     urls: [
+      MOCK_STUN_URL,
       "turn:turn.cloudflare.com:3478?transport=udp",
       "turn:turn.cloudflare.com:3478?transport=tcp",
       "turns:turn.cloudflare.com:5349?transport=tcp",
     ],
     username: "test-user",
     credential: "test-token",
+  };
+}
+
+function createExpectedStunRtcConfig(): RTCConfiguration {
+  return {
+    iceServers: [{ urls: MOCK_STUN_URL }],
   };
 }
 
@@ -193,6 +202,17 @@ describe("PeerConnectionManager", () => {
       expect(createdPeerConnectionConfigs[0]).toEqual({
         iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
       });
+    });
+
+    it("Cloudflare の urls に含まれる STUN サーバーを初回接続で使う", async () => {
+      const signaling = createMockSignaling();
+      const manager = new PeerConnectionManager(signaling, {
+        turnIceServer: createMockTurnIceServer(),
+      });
+
+      await manager.createOffer();
+
+      expect(createdPeerConnectionConfigs[0]).toEqual(createExpectedStunRtcConfig());
     });
 
     it("forceTurn=true の時は最初の接続から TURN を使う", async () => {

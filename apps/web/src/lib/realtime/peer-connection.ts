@@ -2,7 +2,7 @@ import type { SignalingClient } from "./signaling-client";
 
 type IceTransportMode = "stun" | "turn";
 
-const STUN_SERVER: RTCIceServer = { urls: "stun:stun.cloudflare.com:3478" };
+const DEFAULT_STUN_SERVER: RTCIceServer = { urls: "stun:stun.cloudflare.com:3478" };
 
 export type TurnIceServerConfig = {
   urls: string | string[];
@@ -15,15 +15,24 @@ export type PeerConnectionManagerOptions = {
   forceTurn?: boolean;
 };
 
-const normalizeTurnIceServer = (turnIceServer: TurnIceServerConfig): RTCIceServer => ({
-  urls: Array.isArray(turnIceServer.urls) ? [...turnIceServer.urls] : turnIceServer.urls,
-  username: turnIceServer.username,
-  credential: turnIceServer.credential,
-});
+const TURN_URL_PREFIXES = ["turn:", "turns:"];
+const STUN_URL_PREFIXES = ["stun:", "stuns:"];
 
-const getRTCConfig = (mode: IceTransportMode, turnIceServer: RTCIceServer | null): RTCConfiguration => {
-  if (mode === "stun" || !turnIceServer) {
-    return { iceServers: [STUN_SERVER] };
+const isTurnUrl = (url: string): boolean => TURN_URL_PREFIXES.some((prefix) => url.startsWith(prefix));
+
+const isStunUrl = (url: string): boolean => STUN_URL_PREFIXES.some((prefix) => url.startsWith(prefix));
+
+const normalizeUrls = (urls: string | string[]): string[] => (Array.isArray(urls) ? [...urls] : [urls]);
+
+const toRtcIceServerUrls = (urls: string[]): string | string[] => (urls.length === 1 ? urls[0] : urls);
+
+const getRTCConfig = (
+  mode: IceTransportMode,
+  stunIceServer: RTCIceServer,
+  turnIceServer: RTCIceServer | null,
+): RTCConfiguration => {
+  if (mode !== "turn" || !turnIceServer) {
+    return { iceServers: [stunIceServer] };
   }
   return {
     iceServers: [turnIceServer],
@@ -47,6 +56,7 @@ export class PeerConnectionManager {
   private listeners = new Map<keyof PeerEventMap, Set<(...args: never[]) => void>>();
   private makingOffer = false;
   private pendingRemoteCandidates: RTCIceCandidateInit[] = [];
+  private stunIceServer: RTCIceServer = DEFAULT_STUN_SERVER;
   private turnIceServer: RTCIceServer | null = null;
   private forceTurn = false;
   private currentIceTransportMode: IceTransportMode = "stun";
@@ -63,7 +73,25 @@ export class PeerConnectionManager {
   }
 
   setTurnIceServer(turnIceServer: TurnIceServerConfig | null): void {
-    this.turnIceServer = turnIceServer ? normalizeTurnIceServer(turnIceServer) : null;
+    if (!turnIceServer) {
+      this.stunIceServer = DEFAULT_STUN_SERVER;
+      this.turnIceServer = null;
+      return;
+    }
+
+    const urls = normalizeUrls(turnIceServer.urls);
+    const stunUrls = urls.filter(isStunUrl);
+    const turnUrls = urls.filter(isTurnUrl);
+
+    this.stunIceServer = stunUrls.length > 0 ? { urls: toRtcIceServerUrls(stunUrls) } : DEFAULT_STUN_SERVER;
+    this.turnIceServer =
+      turnUrls.length > 0
+        ? {
+            urls: toRtcIceServerUrls(turnUrls),
+            username: turnIceServer.username,
+            credential: turnIceServer.credential,
+          }
+        : null;
   }
 
   setForceTurn(forceTurn: boolean): void {
@@ -237,7 +265,7 @@ export class PeerConnectionManager {
   }
 
   private createPeerConnection(mode: IceTransportMode): RTCPeerConnection {
-    const pc = new RTCPeerConnection(getRTCConfig(mode, this.turnIceServer));
+    const pc = new RTCPeerConnection(getRTCConfig(mode, this.stunIceServer, this.turnIceServer));
 
     pc.onicecandidate = (event) => {
       if (this.pc !== pc) return;
