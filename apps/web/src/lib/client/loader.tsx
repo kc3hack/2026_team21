@@ -6,14 +6,16 @@ import type { ComponentId } from "@/pages/router";
  * Client Componentのレジストリ
  * ここにClient Componentを登録しておくと、自動的にマウントされます
  */
-const componentRegistry: Record<string, FC> = {};
+// biome-ignore lint/suspicious/noExplicitAny: レジストリは複数の異なる型のコンポーネントを保持するため
+const componentRegistry: Record<string, FC<any>> = {};
 
 /**
  * Client Componentを登録する関数
  * @param id Client ComponentのID
  * @param component Client ComponentのReactコンポーネント
  */
-export function registerComponent(id: ComponentId, component: FC) {
+// biome-ignore lint/suspicious/noExplicitAny: レジストリは複数の異なる型のコンポーネントを保持するため
+export function registerComponent(id: ComponentId, component: FC<any>) {
   componentRegistry[id] = component;
 }
 
@@ -24,7 +26,12 @@ export function mountComponents() {
   Object.entries(componentRegistry).forEach(([id, Component]) => {
     const root = document.getElementById(id);
     if (root) {
-      render(<Component />, root);
+      // サーバーから埋め込まれたpropsを取得してパース
+      // この実装は src/pages/router.tsx にあるので合わせて見ること
+      const propsScript = document.getElementById(`${id}-props`);
+      const props = propsScript?.textContent ? JSON.parse(propsScript.textContent) : {};
+
+      render(<Component {...props} />, root);
     }
   });
 }
