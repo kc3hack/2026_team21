@@ -1,6 +1,3 @@
-// apps/web/src/pages/home.client.ts
-import { generateSnowflakeId } from "../lib/snowflake";
-
 document.addEventListener("DOMContentLoaded", () => {
   const ghostBody = document.getElementById("ghost-character");
   const eyeRight = document.getElementById("ghost-eye-right");
@@ -51,7 +48,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   createRoomBtn?.addEventListener("click", () => {
-    const roomId = generateSnowflakeId();
-    window.location.href = `/r/${roomId}`;
+    void (async () => {
+      const response = await fetch("/api/rooms", { method: "POST" });
+      if (!response.ok) {
+        throw new Error(`Failed to create room: ${response.status}`);
+      }
+
+      const payload = (await response.json()) as { id?: unknown };
+      if (typeof payload.id !== "string" || payload.id.length === 0) {
+        throw new Error("Invalid room id response");
+      }
+
+      window.location.href = `/r/${encodeURIComponent(payload.id)}`;
+    })().catch((error) => {
+      console.error(error);
+    });
   });
 });

@@ -56,7 +56,7 @@ const appendLog = (output: HTMLElement, label: string, payload?: unknown): void 
 
 const getSignalUrl = (roomId: string): string => {
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${location.host}/ws/${encodeURIComponent(roomId)}`;
+  return `${protocol}//${location.host}/api/ws/${encodeURIComponent(roomId)}`;
 };
 
 const addReceivedFile = (list: HTMLUListElement, name: string, file: Blob): void => {

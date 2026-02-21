@@ -1,4 +1,11 @@
-export const RoomClient = ({ currentPath }: { currentPath: string }) => {
+type RoomClientProps = {
+  currentPath: string;
+  roomId: string;
+};
+
+export const RoomClient = ({ currentPath, roomId }: RoomClientProps) => {
+  const uploadAction = `/api/rooms/${encodeURIComponent(roomId)}/upload`;
+
   return (
     <main class="home-container">
       <div class="logo-area">
@@ -46,7 +53,7 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
       <div class="upload-form-area" id="upload-form">
         <h2 style="color: #5E7359; margin-top: 0;">ファイルを送信</h2>
         <form
-          action={currentPath}
+          action={uploadAction}
           method="post"
           encType="multipart/form-data"
           style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem;"
