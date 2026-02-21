@@ -7,6 +7,7 @@ import { ReceiveButton } from "@/components/button/ReceiveButton";
 import { LogoIcon } from "@/components/Logo";
 import { useFileSenderConnection } from "@/hooks/useFileSenderConnection";
 import { useQRCode } from "@/hooks/useQRCode";
+import { apiClient } from "@/pages/api/index.client";
 import { Page } from "@/pages/router";
 
 export const TopPageRoute = () => {
@@ -60,6 +61,16 @@ export const TopPage = () => {
   const [isMoving, setIsMoving] = useState(false); // お化けの左スライドアウト状態
   const { ref: qrCodeRef } = useQRCode(url);
 
+  const findRoomIdByShortCode = async (shortcode: string) => {
+    const validate = await apiClient.rooms[":shortcode"].$get({ param: { shortcode } });
+    if (validate.ok) {
+      const { id, shortcode } = await validate.json();
+      console.log("Found room", id, shortcode);
+      return id;
+    } else {
+      throw new Error("Invalid shortcode");
+    }
+  };
   // ファイル選択ダイアログを開く
   const handleClickSelect = () => {
     fileInputRef.current?.click();

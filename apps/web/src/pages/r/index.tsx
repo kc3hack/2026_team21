@@ -7,6 +7,7 @@ import { PinInputBlock } from "@/components/button/PinInputBlock";
 import { SendBackButton } from "@/components/button/SendBackButton";
 import { LogoIcon } from "@/components/Logo";
 import { useWebRTCConnection } from "@/hooks/useWebRTCConnection";
+import { apiClient } from "@/pages/api/index.client";
 import { Page } from "@/pages/router";
 
 export const RoomPageRoute = () => {
@@ -70,6 +71,16 @@ export const RoomPage = (props: Props) => {
 export const ReceivePage = () => {
   const [isMoving, setIsMoving] = useState(false); // オレンジお化けの退場状態
 
+  const findRoomIdByShortCode = async (shortcode: string) => {
+    const validate = await apiClient.rooms[":shortcode"].$get({ param: { shortcode } });
+    if (validate.ok) {
+      const { id } = await validate.json();
+      return id;
+    }
+
+    throw new Error("Invalid shortcode");
+  };
+
   const handleSendClick = () => {
     setIsMoving(true); // 左へスライドアウト開始
     setTimeout(() => {
@@ -106,7 +117,17 @@ export const ReceivePage = () => {
         <h1 style="color: #f6ad49; font-weight: 900; font-size: 2rem; margin-bottom: 2rem;">ファイルを受け取る</h1>
 
         {/* PIN入力ブロック */}
-        <PinInputBlock />
+        <PinInputBlock
+          onSubmit={async (shortcode) => {
+            try {
+              const roomId = await findRoomIdByShortCode(shortcode);
+              window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}`;
+            } catch (error) {
+              console.error(error);
+              alert("無効なショートコードです");
+            }
+          }}
+        />
 
         {/* 送信へ戻るボタン (オレンジ縁) */}
         <SendBackButton onClick={handleSendClick} />
