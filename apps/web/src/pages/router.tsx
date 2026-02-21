@@ -56,7 +56,9 @@ Object.entries(components).forEach(([id, Component]) => {
  *
  * export const CounterPageRoute = app;
  */
-export const Page = <T extends ComponentId>(args: { id: T } & ComponentProps<T>) => {
+export const Page = <T extends ComponentId>(
+  args: { id: T } & (ComponentProps<T> extends undefined ? object : ComponentProps<T>),
+) => {
   const { id, ...props } = args;
   const hasProps = Object.keys(props).length > 0;
 
