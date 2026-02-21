@@ -10,6 +10,7 @@
     "test": "vitest --run"
   },
   "dependencies": {
+    "@cloudflare/workers-types": "catalog:",
     "hono": "^4.11.10"
   },
   "devDependencies": {
