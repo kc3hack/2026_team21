@@ -53,7 +53,6 @@ export const TopPage = () => {
     shortcode,
     toggleOpen,
     handleCreateRoom,
-    fileInputRef,
     // 必要ならデバッグ表示用に取り出して使える
     // roomId, wsStatus, peerStatus, peerRole, dataChannelStatus, sendProgress, lastSentFile, errorMessage,
   } = useFileSenderConnection();
