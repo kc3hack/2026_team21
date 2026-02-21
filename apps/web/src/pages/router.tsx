@@ -1,7 +1,6 @@
 import { CounterPage } from "@/components/pages/counter/index.page";
-import { HomePage } from "@/components/pages/index.page";
-import { ClientMount } from "@/lib/client/helper";
 import { registerComponent } from "@/lib/client/loader";
+import { TopPage } from "@/pages/index.page";
 
 /**
  * URLパスとClient Componentを紐付けるレジストリ。
@@ -10,7 +9,7 @@ import { registerComponent } from "@/lib/client/loader";
  * アプリケーションのハンドラーはここではなく、 index.tsx で定義すること。
  */
 const components = {
-  "/": HomePage,
+  "/": TopPage,
   "/counter": CounterPage,
 } as const;
 
@@ -21,7 +20,8 @@ Object.entries(components).forEach(([id, Component]) => {
 });
 
 /**
- * CSR するページをレンダリングするためのコンポーネント
+ * CSR するページをレンダリングするためのコンポーネント。
+ * Client Component がマウントされる場所を提供するだけのシンプルなもの。
  *
  * @param id Client ComponentのID（URLパスと同じにする）
  * @returns
@@ -38,5 +38,5 @@ Object.entries(components).forEach(([id, Component]) => {
  * export const CounterPageRoute = app;
  */
 export const Page = ({ id }: { id: ComponentId }) => {
-  return <ClientMount id={id} />;
+  return <div id={id} />;
 };
