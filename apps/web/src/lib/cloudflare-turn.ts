@@ -1,10 +1,14 @@
-import type { TurnIceServerConfig } from "@/lib/realtime/peer-connection";
-
 const TURN_CREDENTIALS_ENDPOINT_BASE = "https://rtc.live.cloudflare.com/v1/turn/keys";
-const DEFAULT_TURN_CREDENTIAL_TTL_SECONDS = 86_400;
+export const DEFAULT_TURN_CREDENTIAL_TTL_SECONDS = 86_400;
 
-type CloudflareTurnCredentialResponse = {
-  iceServers: TurnIceServerConfig;
+export type CloudflareTurnIceServer = {
+  urls: string | string[];
+  username: string;
+  credential: string;
+};
+
+export type CloudflareTurnCredentialResponse = {
+  iceServers: CloudflareTurnIceServer;
 };
 
 type GenerateCloudflareTurnCredentialsOptions = {
@@ -12,16 +16,28 @@ type GenerateCloudflareTurnCredentialsOptions = {
   fetchImpl?: typeof fetch;
 };
 
-const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((item) => typeof item === "string");
+const isNonEmptyString = (value: unknown): value is string => typeof value === "string" && value.length > 0;
 
-const isCloudflareTurnCredentialResponse = (value: unknown): value is CloudflareTurnCredentialResponse => {
+const isNonEmptyStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.length > 0 && value.every(isNonEmptyString);
+
+const normalizeIceServerUrls = (value: unknown): string | string[] | null => {
+  if (isNonEmptyString(value)) {
+    return value;
+  }
+  if (isNonEmptyStringArray(value)) {
+    return [...value];
+  }
+  return null;
+};
+
+const parseCloudflareTurnCredentialResponse = (value: unknown): CloudflareTurnCredentialResponse | null => {
   if (typeof value !== "object" || value === null) {
-    return false;
+    return null;
   }
   const iceServers = (value as { iceServers?: unknown }).iceServers;
   if (typeof iceServers !== "object" || iceServers === null) {
-    return false;
+    return null;
   }
 
   const record = iceServers as {
@@ -30,13 +46,24 @@ const isCloudflareTurnCredentialResponse = (value: unknown): value is Cloudflare
     credential?: unknown;
   };
 
-  return isStringArray(record.urls) && typeof record.username === "string" && typeof record.credential === "string";
+  const urls = normalizeIceServerUrls(record.urls);
+  if (!urls || !isNonEmptyString(record.username) || !isNonEmptyString(record.credential)) {
+    return null;
+  }
+
+  return {
+    iceServers: {
+      urls,
+      username: record.username,
+      credential: record.credential,
+    },
+  };
 };
 
 const toCredentialsEndpoint = (turnKeyId: string): string =>
   `${TURN_CREDENTIALS_ENDPOINT_BASE}/${encodeURIComponent(turnKeyId)}/credentials/generate`;
 
-const resolveTtl = (ttl?: number): number => {
+const normalizeTurnCredentialTtl = (ttl?: number): number => {
   if (typeof ttl === "number" && Number.isFinite(ttl) && ttl > 0) {
     return Math.floor(ttl);
   }
@@ -60,7 +87,7 @@ export const generateCloudflareTurnCredentials = async (
       Authorization: `Bearer ${turnApiToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ ttl: resolveTtl(options.ttl) }),
+    body: JSON.stringify({ ttl: normalizeTurnCredentialTtl(options.ttl) }),
   });
 
   if (!response.ok) {
@@ -68,16 +95,10 @@ export const generateCloudflareTurnCredentials = async (
     throw new Error(`Failed to generate TURN credentials (${response.status}): ${body}`);
   }
 
-  const payload = (await response.json()) as unknown;
-  if (!isCloudflareTurnCredentialResponse(payload)) {
+  const payload = parseCloudflareTurnCredentialResponse((await response.json()) as unknown);
+  if (!payload) {
     throw new Error("Invalid TURN credentials response from Cloudflare");
   }
 
-  return {
-    iceServers: {
-      urls: [...payload.iceServers.urls],
-      username: payload.iceServers.username,
-      credential: payload.iceServers.credential,
-    },
-  };
+  return payload;
 };

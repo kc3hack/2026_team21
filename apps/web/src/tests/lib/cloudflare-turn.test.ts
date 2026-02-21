@@ -89,6 +89,31 @@ describe("generateCloudflareTurnCredentials", () => {
     );
   });
 
+  it("urls が単一文字列のレスポンスも受け付ける", async () => {
+    const fetchImpl = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          iceServers: {
+            urls: "turn:turn.cloudflare.com:3478?transport=udp",
+            username: "generated-username",
+            credential: "generated-credential",
+          },
+        }),
+        { status: 200 },
+      );
+    });
+
+    const result = await generateCloudflareTurnCredentials(createMockEnv(), { fetchImpl });
+
+    expect(result).toEqual({
+      iceServers: {
+        urls: "turn:turn.cloudflare.com:3478?transport=udp",
+        username: "generated-username",
+        credential: "generated-credential",
+      },
+    });
+  });
+
   it("必要な binding が不足していたらエラー", async () => {
     await expect(
       generateCloudflareTurnCredentials(
@@ -104,6 +129,25 @@ describe("generateCloudflareTurnCredentials", () => {
   it("Cloudflare のレスポンスが不正ならエラー", async () => {
     const fetchImpl = vi.fn(async () => {
       return new Response(JSON.stringify({ bad: "response" }), { status: 200 });
+    });
+
+    await expect(generateCloudflareTurnCredentials(createMockEnv(), { fetchImpl })).rejects.toThrow(
+      "Invalid TURN credentials response from Cloudflare",
+    );
+  });
+
+  it("urls 配列が空のレスポンスはエラー", async () => {
+    const fetchImpl = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          iceServers: {
+            urls: [],
+            username: "generated-username",
+            credential: "generated-credential",
+          },
+        }),
+        { status: 200 },
+      );
     });
 
     await expect(generateCloudflareTurnCredentials(createMockEnv(), { fetchImpl })).rejects.toThrow(

@@ -2,7 +2,7 @@ import type { SignalingClient } from "./signaling-client";
 
 type IceTransportMode = "stun" | "turn";
 
-const DEFAULT_STUN_SERVER: RTCIceServer = { urls: "stun:stun.cloudflare.com:3478" };
+const DEFAULT_STUN_URL = "stun:stun.cloudflare.com:3478";
 
 export type TurnIceServerConfig = {
   urls: string | string[];
@@ -18,6 +18,11 @@ export type PeerConnectionManagerOptions = {
 const TURN_URL_PREFIXES = ["turn:", "turns:"];
 const STUN_URL_PREFIXES = ["stun:", "stuns:"];
 
+type ResolvedIceServers = {
+  stun: RTCIceServer;
+  turn: RTCIceServer | null;
+};
+
 const isTurnUrl = (url: string): boolean => TURN_URL_PREFIXES.some((prefix) => url.startsWith(prefix));
 
 const isStunUrl = (url: string): boolean => STUN_URL_PREFIXES.some((prefix) => url.startsWith(prefix));
@@ -26,16 +31,39 @@ const normalizeUrls = (urls: string | string[]): string[] => (Array.isArray(urls
 
 const toRtcIceServerUrls = (urls: string[]): string | string[] => (urls.length === 1 ? urls[0] : urls);
 
-const getRTCConfig = (
-  mode: IceTransportMode,
-  stunIceServer: RTCIceServer,
-  turnIceServer: RTCIceServer | null,
-): RTCConfiguration => {
-  if (mode !== "turn" || !turnIceServer) {
-    return { iceServers: [stunIceServer] };
+const createDefaultIceServers = (): ResolvedIceServers => ({
+  stun: { urls: DEFAULT_STUN_URL },
+  turn: null,
+});
+
+const resolveIceServers = (turnIceServer: TurnIceServerConfig | null): ResolvedIceServers => {
+  if (!turnIceServer) {
+    return createDefaultIceServers();
+  }
+
+  const urls = normalizeUrls(turnIceServer.urls);
+  const stunUrls = urls.filter(isStunUrl);
+  const turnUrls = urls.filter(isTurnUrl);
+
+  return {
+    stun: stunUrls.length > 0 ? { urls: toRtcIceServerUrls(stunUrls) } : { urls: DEFAULT_STUN_URL },
+    turn:
+      turnUrls.length > 0
+        ? {
+            urls: toRtcIceServerUrls(turnUrls),
+            username: turnIceServer.username,
+            credential: turnIceServer.credential,
+          }
+        : null,
+  };
+};
+
+const getRTCConfig = (mode: IceTransportMode, iceServers: ResolvedIceServers): RTCConfiguration => {
+  if (mode !== "turn" || !iceServers.turn) {
+    return { iceServers: [iceServers.stun] };
   }
   return {
-    iceServers: [turnIceServer],
+    iceServers: [iceServers.turn],
     iceTransportPolicy: "relay",
   };
 };
@@ -56,8 +84,7 @@ export class PeerConnectionManager {
   private listeners = new Map<keyof PeerEventMap, Set<(...args: never[]) => void>>();
   private makingOffer = false;
   private pendingRemoteCandidates: RTCIceCandidateInit[] = [];
-  private stunIceServer: RTCIceServer = DEFAULT_STUN_SERVER;
-  private turnIceServer: RTCIceServer | null = null;
+  private iceServers: ResolvedIceServers = createDefaultIceServers();
   private forceTurn = false;
   private currentIceTransportMode: IceTransportMode = "stun";
   private hasTurnRetryAttempted = false;
@@ -73,25 +100,7 @@ export class PeerConnectionManager {
   }
 
   setTurnIceServer(turnIceServer: TurnIceServerConfig | null): void {
-    if (!turnIceServer) {
-      this.stunIceServer = DEFAULT_STUN_SERVER;
-      this.turnIceServer = null;
-      return;
-    }
-
-    const urls = normalizeUrls(turnIceServer.urls);
-    const stunUrls = urls.filter(isStunUrl);
-    const turnUrls = urls.filter(isTurnUrl);
-
-    this.stunIceServer = stunUrls.length > 0 ? { urls: toRtcIceServerUrls(stunUrls) } : DEFAULT_STUN_SERVER;
-    this.turnIceServer =
-      turnUrls.length > 0
-        ? {
-            urls: toRtcIceServerUrls(turnUrls),
-            username: turnIceServer.username,
-            credential: turnIceServer.credential,
-          }
-        : null;
+    this.iceServers = resolveIceServers(turnIceServer);
   }
 
   setForceTurn(forceTurn: boolean): void {
@@ -128,11 +137,15 @@ export class PeerConnectionManager {
     });
   }
 
-  /** ピアが参加した時にオファーを作成する（最初に接続した側が呼ぶ） */
-  async createOffer(): Promise<void> {
+  private resetIceTransportState(isOfferer: boolean): void {
+    this.isOfferer = isOfferer;
     this.currentIceTransportMode = this.getInitialIceTransportMode();
     this.hasTurnRetryAttempted = false;
-    this.isOfferer = true;
+  }
+
+  /** ピアが参加した時にオファーを作成する（最初に接続した側が呼ぶ） */
+  async createOffer(): Promise<void> {
+    this.resetIceTransportState(true);
     await this.createOfferWithCurrentTransport();
   }
 
@@ -170,9 +183,7 @@ export class PeerConnectionManager {
   }
 
   private async handleOffer(sdp: string): Promise<void> {
-    this.isOfferer = false;
-    this.currentIceTransportMode = this.getInitialIceTransportMode();
-    this.hasTurnRetryAttempted = false;
+    this.resetIceTransportState(false);
     // 既存の接続がある場合はクリーンアップしてからリソースリークを防ぐ
     if (this.pc) {
       this.cleanup();
@@ -195,7 +206,7 @@ export class PeerConnectionManager {
   }
 
   private getInitialIceTransportMode(): IceTransportMode {
-    if (this.forceTurn && this.turnIceServer) {
+    if (this.forceTurn && this.iceServers.turn) {
       return "turn";
     }
     return "stun";
@@ -248,7 +259,7 @@ export class PeerConnectionManager {
       this.isOfferer &&
       this.currentIceTransportMode === "stun" &&
       !this.hasTurnRetryAttempted &&
-      this.turnIceServer !== null
+      this.iceServers.turn !== null
     );
   }
 
@@ -265,7 +276,7 @@ export class PeerConnectionManager {
   }
 
   private createPeerConnection(mode: IceTransportMode): RTCPeerConnection {
-    const pc = new RTCPeerConnection(getRTCConfig(mode, this.stunIceServer, this.turnIceServer));
+    const pc = new RTCPeerConnection(getRTCConfig(mode, this.iceServers));
 
     pc.onicecandidate = (event) => {
       if (this.pc !== pc) return;
