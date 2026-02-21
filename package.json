@@ -10,7 +10,7 @@
     "lint": "biome check",
     "lint:fix": "biome check --fix",
     "typecheck": "run-p typecheck:*",
-    "typecheck:user": "pnpm user typecheck",
+    "typecheck:web": "pnpm web typecheck",
     "test": "run-s test:*",
     "test:web": "pnpm web test",
     "preinstall": "npx only-allow pnpm"
