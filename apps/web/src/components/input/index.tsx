@@ -1,5 +1,4 @@
 import { css } from "hono/css";
-import type { JSX } from "hono/jsx/jsx-runtime";
 
 export const ShortCodeInput = () => {
   const styles = css`
