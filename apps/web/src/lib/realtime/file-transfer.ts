@@ -55,15 +55,20 @@ export async function sendFile(
 }
 
 function waitForBufferDrain(channel: RTCDataChannel): Promise<void> {
+  if (channel.bufferedAmount <= BUFFER_LOW_WATERMARK) {
+    return Promise.resolve();
+  }
+
   return new Promise((resolve) => {
-    const check = () => {
-      if (channel.bufferedAmount <= BUFFER_LOW_WATERMARK) {
-        resolve();
-      } else {
-        setTimeout(check, 50);
-      }
+    const prev = channel.bufferedAmountLowThreshold;
+    channel.bufferedAmountLowThreshold = BUFFER_LOW_WATERMARK;
+
+    const onDrain = () => {
+      channel.removeEventListener("bufferedamountlow", onDrain);
+      channel.bufferedAmountLowThreshold = prev;
+      resolve();
     };
-    check();
+    channel.addEventListener("bufferedamountlow", onDrain);
   });
 }
 
