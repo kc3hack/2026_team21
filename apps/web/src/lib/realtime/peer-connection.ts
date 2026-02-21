@@ -45,6 +45,9 @@ export class PeerConnectionManager {
 
   /** ピアが参加した時にオファーを作成する（最初に接続した側が呼ぶ） */
   async createOffer(): Promise<void> {
+    if (this.pc) {
+      this.cleanup();
+    }
     this.pc = this.createPeerConnection();
 
     // オファー側がDataChannelを作成する
@@ -65,6 +68,10 @@ export class PeerConnectionManager {
   }
 
   private async handleOffer(sdp: string): Promise<void> {
+    // 既存の接続がある場合はクリーンアップしてからリソースリークを防ぐ
+    if (this.pc) {
+      this.cleanup();
+    }
     this.pc = this.createPeerConnection();
     await this.pc.setRemoteDescription({ type: "offer", sdp });
     const answer = await this.pc.createAnswer();
