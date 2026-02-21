@@ -1,25 +1,36 @@
 import type { SignalingClient } from "./signaling-client";
 
-const getRTCConfig = (env: Cloudflare.Env): RTCConfiguration => ({
-  iceServers: [
-    { urls: "stun:stun.cloudflare.com:3478" },
-    {
-      urls: "turn:turn.cloudflare.com:3478?transport=udp",
-      username: env.CF_TURN_USERNAME,
-      credential: env.CF_TURN_TOKEN,
-    },
-    {
-      urls: "turn:turn.cloudflare.com:3478?transport=tcp",
-      username: env.CF_TURN_USERNAME,
-      credential: env.CF_TURN_TOKEN,
-    },
-    {
-      urls: "turns:turn.cloudflare.com:5349?transport=tcp",
-      username: env.CF_TURN_USERNAME,
-      credential: env.CF_TURN_TOKEN,
-    },
-  ],
-});
+type IceTransportMode = "stun" | "turn";
+
+const STUN_SERVER: RTCIceServer = { urls: "stun:stun.cloudflare.com:3478" };
+
+const getTurnIceServers = (env: Cloudflare.Env): RTCIceServer[] => [
+  {
+    urls: "turn:turn.cloudflare.com:3478?transport=udp",
+    username: env.CF_TURN_USERNAME,
+    credential: env.CF_TURN_TOKEN,
+  },
+  {
+    urls: "turn:turn.cloudflare.com:3478?transport=tcp",
+    username: env.CF_TURN_USERNAME,
+    credential: env.CF_TURN_TOKEN,
+  },
+  {
+    urls: "turns:turn.cloudflare.com:5349?transport=tcp",
+    username: env.CF_TURN_USERNAME,
+    credential: env.CF_TURN_TOKEN,
+  },
+];
+
+const getRTCConfig = (env: Cloudflare.Env, mode: IceTransportMode): RTCConfiguration => {
+  if (mode === "stun") {
+    return { iceServers: [STUN_SERVER] };
+  }
+  return {
+    iceServers: getTurnIceServers(env),
+    iceTransportPolicy: "relay",
+  };
+};
 
 const DATA_CHANNEL_LABEL = "file-transfer";
 
@@ -36,13 +47,20 @@ export class PeerConnectionManager {
   private dataChannel: RTCDataChannel | null = null;
   private listeners = new Map<keyof PeerEventMap, Set<(...args: never[]) => void>>();
   private makingOffer = false;
-  private readonly RTC_CONFIG: RTCConfiguration;
+  private pendingRemoteCandidates: RTCIceCandidateInit[] = [];
+  private readonly rtcConfigByMode: Record<IceTransportMode, RTCConfiguration>;
+  private currentIceTransportMode: IceTransportMode = "stun";
+  private hasTurnRetryAttempted = false;
+  private isOfferer = false;
 
   constructor(
     private readonly signaling: SignalingClient,
     env: CloudflareBindings,
   ) {
-    this.RTC_CONFIG = getRTCConfig(env);
+    this.rtcConfigByMode = {
+      stun: getRTCConfig(env, "stun"),
+      turn: getRTCConfig(env, "turn"),
+    };
     this.setupSignalingHandlers();
   }
 
@@ -78,26 +96,39 @@ export class PeerConnectionManager {
 
   /** ピアが参加した時にオファーを作成する（最初に接続した側が呼ぶ） */
   async createOffer(): Promise<void> {
+    this.currentIceTransportMode = "stun";
+    this.hasTurnRetryAttempted = false;
+    this.isOfferer = true;
+    await this.createOfferWithCurrentTransport();
+  }
+
+  private async createOfferWithCurrentTransport(): Promise<void> {
     if (this.pc) {
       this.cleanup();
     }
-    this.pc = this.createPeerConnection();
+    this.pc = this.createPeerConnection(this.currentIceTransportMode);
+    const pc = this.pc;
 
     // オファー側がDataChannelを作成する
-    this.dataChannel = this.pc.createDataChannel(DATA_CHANNEL_LABEL);
+    this.dataChannel = pc.createDataChannel(DATA_CHANNEL_LABEL);
     this.setupDataChannel(this.dataChannel);
 
     this.makingOffer = true;
     try {
-      const offer = await this.pc.createOffer();
-      await this.pc.setLocalDescription(offer);
-      const sdp = this.pc.localDescription?.sdp;
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      if (this.pc !== pc) {
+        return;
+      }
+      const sdp = pc.localDescription?.sdp;
       if (!sdp) {
         throw new Error("Failed to create local offer SDP");
       }
       this.signaling.send({ type: "offer", sdp });
     } catch (error) {
-      this.cleanup();
+      if (this.pc === pc) {
+        this.cleanup();
+      }
       throw error;
     } finally {
       this.makingOffer = false;
@@ -105,13 +136,17 @@ export class PeerConnectionManager {
   }
 
   private async handleOffer(sdp: string): Promise<void> {
+    this.isOfferer = false;
+    this.currentIceTransportMode = "stun";
+    this.hasTurnRetryAttempted = false;
     // 既存の接続がある場合はクリーンアップしてからリソースリークを防ぐ
     if (this.pc) {
       this.cleanup();
     }
-    this.pc = this.createPeerConnection();
+    this.pc = this.createPeerConnection(this.currentIceTransportMode);
     try {
       await this.pc.setRemoteDescription({ type: "offer", sdp });
+      await this.flushPendingRemoteCandidates();
       const answer = await this.pc.createAnswer();
       await this.pc.setLocalDescription(answer);
       const answerSdp = this.pc.localDescription?.sdp;
@@ -132,10 +167,18 @@ export class PeerConnectionManager {
       return;
     }
     await this.pc.setRemoteDescription({ type: "answer", sdp });
+    await this.flushPendingRemoteCandidates();
   }
 
   private async handleCandidate(candidate: RTCIceCandidateInit): Promise<void> {
-    if (!this.pc) return;
+    if (!this.pc) {
+      this.pendingRemoteCandidates.push(candidate);
+      return;
+    }
+    if (!this.pc.remoteDescription) {
+      this.pendingRemoteCandidates.push(candidate);
+      return;
+    }
     try {
       await this.pc.addIceCandidate(candidate);
     } catch (e) {
@@ -146,10 +189,39 @@ export class PeerConnectionManager {
     }
   }
 
-  private createPeerConnection(): RTCPeerConnection {
-    const pc = new RTCPeerConnection(this.RTC_CONFIG);
+  private async flushPendingRemoteCandidates(): Promise<void> {
+    if (!this.pc || !this.pc.remoteDescription || this.pendingRemoteCandidates.length === 0) {
+      return;
+    }
+
+    const queued = this.pendingRemoteCandidates;
+    this.pendingRemoteCandidates = [];
+    for (const candidate of queued) {
+      await this.pc.addIceCandidate(candidate);
+    }
+  }
+
+  private shouldRetryWithTurn(pc: RTCPeerConnection): boolean {
+    return this.pc === pc && this.isOfferer && this.currentIceTransportMode === "stun" && !this.hasTurnRetryAttempted;
+  }
+
+  private async retryOfferWithTurn(): Promise<void> {
+    this.hasTurnRetryAttempted = true;
+    this.currentIceTransportMode = "turn";
+    try {
+      await this.createOfferWithCurrentTransport();
+    } catch (error) {
+      console.error("Failed to retry WebRTC offer with TURN:", error);
+      this.cleanup();
+      this.emit("disconnected");
+    }
+  }
+
+  private createPeerConnection(mode: IceTransportMode): RTCPeerConnection {
+    const pc = new RTCPeerConnection(this.rtcConfigByMode[mode]);
 
     pc.onicecandidate = (event) => {
+      if (this.pc !== pc) return;
       if (event.candidate) {
         this.signaling.send({
           type: "candidate",
@@ -159,11 +231,17 @@ export class PeerConnectionManager {
     };
 
     pc.ondatachannel = (event) => {
+      if (this.pc !== pc) return;
       this.dataChannel = event.channel;
       this.setupDataChannel(event.channel);
     };
 
     pc.onconnectionstatechange = () => {
+      if (this.pc !== pc) return;
+      if (pc.connectionState === "failed" && this.shouldRetryWithTurn(pc)) {
+        void this.retryOfferWithTurn();
+        return;
+      }
       if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
         this.cleanup();
         this.emit("disconnected");
@@ -194,6 +272,7 @@ export class PeerConnectionManager {
   }
 
   cleanup(): void {
+    this.pendingRemoteCandidates = [];
     this.dataChannel?.close();
     this.dataChannel = null;
     this.pc?.close();
