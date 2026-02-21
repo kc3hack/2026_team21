@@ -14,6 +14,12 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
             <img src="/images/home/body.svg" alt="body" class="ghost-part" />
             <img src="/images/home/head.svg" alt="head" class="ghost-part" />
 
+            <div class="zzz-container" id="zzz-effect">
+              <span class="zzz-text z1">z</span>
+              <span class="zzz-text z2">z</span>
+              <span class="zzz-text z3">z</span>
+            </div>
+
             {/* 腕パーツ */}
             <img id="ghost-arm-right" src="/images/home/right.svg" alt="right" class="ghost-part" />
             <img id="ghost-arm-left" src="/images/home/left.svg" alt="left" class="ghost-part" />

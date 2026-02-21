@@ -394,6 +394,56 @@ img[alt="head"] {
   border-radius: 1rem;
 }
 
+.zzz-container {
+  position: absolute;
+  top: 5%;
+  right: 20%;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.zzz-text {
+  font-weight: bold;
+
+  color: rgba(94, 115, 89, 0.8); 
+  line-height: 0.7;
+  opacity: 0;
+}
+
+@keyframes float-zzz {
+  0% {
+    transform: translateX(0) translateY(0) scale(0.5) rotate(-10deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(40px) translateY(-60px) scale(1.2) rotate(10deg);
+    opacity: 0;
+  }
+}
+
+.z1 {
+  font-size: 2.5rem;
+
+  animation: float-zzz 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+.z2 {
+  font-size: 3.5rem;
+  animation: float-zzz 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation-delay: 1.3s;
+}
+.z3 {
+  font-size: 3rem;
+  animation: float-zzz 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation-delay: 2.6s;
+}
+
+
 @media (min-width: 768px) {
   .logo-area { top: 6rem; }
   .logo-img { height: 12rem; }

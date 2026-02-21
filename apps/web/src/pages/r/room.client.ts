@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusBtnArea = document.getElementById("status-btn-area");
   const uploadForm = document.getElementById("upload-form");
 
+  const zzzEffect = document.getElementById('zzz-effect');
+
   const playNotice = () => {
     ghostBody?.classList.remove("is-noticing");
     void ghostBody?.offsetWidth;
@@ -35,6 +37,16 @@ document.addEventListener("DOMContentLoaded", () => {
     eyeRight.style.transform = transformStyle;
     eyeLeft.style.transform = transformStyle;
   };
+
+  setTimeout(() => {
+    if (zzzEffect) {
+      zzzEffect.style.opacity = '0';
+      setTimeout(() => {
+        zzzEffect.style.display = 'none';
+      }, 300);
+    }
+  }, 2700);
+
 
   setTimeout(() => {
     if (statusBtn) statusBtn.textContent = "マッチング成功";
