@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { ShortCodeForm } from "@/components/input";
 import { css, Style } from "hono/css";
 import { useState } from "hono/jsx";
 import { SlidingGhost } from "@/components/animations/SlidingGhost";
 import { FileSelectArea } from "@/components/button/FileSelectArea";
 import { ReceiveButton } from "@/components/button/ReceiveButton";
+import { ShortCodeForm } from "@/components/input";
 import { LogoIcon } from "@/components/Logo";
 import { useFileSenderConnection } from "@/hooks/useFileSenderConnection";
 import { useQRCode } from "@/hooks/useQRCode";
@@ -71,6 +71,7 @@ export const TopPage = () => {
     } else {
       throw new Error("Invalid shortcode");
     }
+  };
   // ファイル選択ダイアログを開く
   const handleClickSelect = () => {
     fileInputRef.current?.click();
