@@ -7,7 +7,7 @@
     "user": "pnpm --filter ./apps/user",
     "web": "pnpm --filter ./apps/web",
     "dev": "run-p dev:*",
-    "dev:user": "pnpm user dev",
+    "dev:web": "pnpm web dev",
     "lint": "biome check",
     "lint:fix": "biome check --fix",
     "typecheck": "run-p typecheck:*",
