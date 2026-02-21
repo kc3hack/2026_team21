@@ -28,9 +28,9 @@ export const RoomClient = ({ currentPath }: { currentPath: string }) => {
 
             {/* 目パーツ */}
             {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
-            <img id="ghost-eye-right" src="/images/room/right.svg" alt="right_eye" class="ghost-part ghost-eye" />
+            <img id="ghost-eye-right" src="/images/room/right_sleep.svg" alt="right_eye" class="ghost-part ghost-eye" />
             {/* biome-ignore lint/performance/noImgElement: Hono does not use Next.js Image */}
-            <img id="ghost-eye-left" src="/images/room/left.svg" alt="left_eye" class="ghost-part ghost-eye" />
+            <img id="ghost-eye-left" src="/images/room/left_sleep.svg" alt="left_eye" class="ghost-part ghost-eye" />
           </div>
           <div class="ghost-shadow" />
         </div>

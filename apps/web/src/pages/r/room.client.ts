@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     if (statusBtn) statusBtn.textContent = "マッチング成功";
     if (eyeRight && eyeLeft) {
-      eyeRight.src = "/images/room/right.svg";
+      eyeRight.src = "/images/room/right_sleep.svg";
       eyeLeft.src = "/images/room/wakeup.svg";
     }
     playNotice();
