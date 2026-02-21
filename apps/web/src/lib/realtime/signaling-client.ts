@@ -89,7 +89,18 @@ export class SignalingClient {
   private emit<K extends keyof SignalingEventMap>(event: K, ...args: Parameters<SignalingEventMap[K]>): void {
     for (const callback of this.listeners.get(event) ?? []) {
       // biome-ignore lint/suspicious/noExplicitAny: 型安全は emit のシグネチャで保証される
-      (callback as (...a: any[]) => void)(...args);
+      const result = (callback as (...a: any[]) => unknown)(...args);
+      // emit() は Promise を扱わないため、async リスナーの reject を error イベントへ流す
+      if (result && typeof (result as any).then === "function") {
+        (result as Promise<unknown>).catch((err) => {
+          if (event === "error") {
+            // error リスナー自体のエラーで無限ループしないようにする
+            return;
+          }
+          const error = err instanceof Error ? err : new Error(String(err));
+          this.emit("error", error);
+        });
+      }
     }
   }
 }
