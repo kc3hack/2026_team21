@@ -28,6 +28,14 @@ const ghostContainerClass = css`
     bottom: 16px;
   }
 
+  @media (max-width: 600px) {
+    &.mobile-middle {
+      top: 66%;
+      bottom: auto;
+      transform: translateX(50%) translateY(-50%) scale(0.46);
+    }
+  }
+
   &.is-entering {
     animation: ${slideInFromRight} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
   }
@@ -40,11 +48,13 @@ const ghostContainerClass = css`
 
   &.is-entering-left {
     animation: ${slideInFromLeft} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
+    animation: ${slideInFromLeft} 4.5s linear both;
   }
 
   @media (max-width: 600px) {
     &.is-entering-left {
       animation: ${slideInFromLeftMobile} 1.2s cubic-bezier(0.22, 0.9, 0.22, 1) both;
+      animation: ${slideInFromLeftMobile} 4.5s linear both;
     }
   }
 

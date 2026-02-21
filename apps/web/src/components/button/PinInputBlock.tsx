@@ -13,10 +13,12 @@ const containerStyles = css`
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
+  box-sizing: border-box;
 
   @media (max-width: 600px) {
-    max-width: 300px;
-    padding: 1.5rem 1rem;
+    width: min(96vw, 24rem);
+    max-width: 24rem;
+    padding: 1.85rem 1.25rem;
     border-width: 4px;
   }
 `;
@@ -58,8 +60,8 @@ const pinInputStyles = css`
   }
 
   @media (max-width: 600px) {
-    width: 2.2rem;
-    height: 3rem;
+    width: 2.35rem;
+    height: 3.24rem;
     font-size: 1.5rem;
   }
 `;

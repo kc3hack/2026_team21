@@ -75,6 +75,29 @@ const popupClass = css`
   .popup-ok:active {
     transform: scale(0.97);
   }
+
+  @media (max-width: 600px) {
+    .popup-card {
+      width: min(94vw, 23rem);
+      padding: 1.55rem 1.2rem;
+      border-radius: 18px;
+    }
+
+    .popup-title {
+      font-size: 1.26rem;
+    }
+
+    .popup-message {
+      font-size: 0.96rem;
+      line-height: 1.52;
+    }
+
+    .popup-ok {
+      margin-top: 1rem;
+      font-size: 1.02rem;
+      padding: 0.7rem 2rem;
+    }
+  }
 `;
 
 type Props = {
