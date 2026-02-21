@@ -1,6 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "web",
+  "name": "charm-web",
   "compatibility_date": "2025-08-03",
-  "main": "./src/index.tsx"
+  "main": "./src/index.tsx",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DOORMAN",
+        "class_name": "DoorMan"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DoorMan"]
+    }
+  ]
 }
