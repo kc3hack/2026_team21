@@ -22,6 +22,16 @@ function createMockKv(initialState: KvState = {}) {
   return { kv, get, put, store };
 }
 
+function mockRandomUint32Values(values: number[]) {
+  return vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((array) => {
+    if (!(array instanceof Uint32Array)) {
+      throw new Error("Expected Uint32Array");
+    }
+    array[0] = values.shift() ?? 0;
+    return array;
+  });
+}
+
 describe("room-shortcode", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -41,7 +51,7 @@ describe("room-shortcode", () => {
 
   it("新規作成時は双方向マッピングを TTL 付きで保存する", async () => {
     const snowflakeId = "9876543210000";
-    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+    const randomSpy = mockRandomUint32Values([0]);
     const { kv, put, store } = createMockKv();
 
     const shortcode = await createShortcodeForRoom(kv, snowflakeId);
@@ -57,7 +67,7 @@ describe("room-shortcode", () => {
 
   it("short code が重複した場合は再試行して別コードを採用する", async () => {
     const snowflakeId = "2222222222222";
-    vi.spyOn(Math, "random").mockReturnValueOnce(0).mockReturnValueOnce(0.5);
+    mockRandomUint32Values([0, 0x80000000]);
     const { kv } = createMockKv({
       "shortcode:100000": "already-used-room",
     });
@@ -69,7 +79,7 @@ describe("room-shortcode", () => {
 
   it("重複が続いて上限回数に達したらエラー", async () => {
     const snowflakeId = "3333333333333";
-    vi.spyOn(Math, "random").mockReturnValue(0);
+    mockRandomUint32Values(new Array<number>(10).fill(0));
     const { kv } = createMockKv({
       "shortcode:100000": "always-collide",
     });
