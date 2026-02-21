@@ -1,4 +1,5 @@
 import { CounterPage } from "@/components/pages/counter/index.page";
+import { HomePage } from "@/components/pages/index.page";
 import { ClientMount } from "@/lib/client/helper";
 import { registerComponent } from "@/lib/client/loader";
 
@@ -9,6 +10,7 @@ import { registerComponent } from "@/lib/client/loader";
  * アプリケーションのハンドラーはここではなく、 index.tsx で定義すること。
  */
 const components = {
+  "/": HomePage,
   "/counter": CounterPage,
 } as const;
 

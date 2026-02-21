@@ -1,23 +1,15 @@
 import { Hono } from "hono";
-import { HomePage } from "@/components/pages";
 import { CounterPageRoute } from "@/pages/counter";
 import { DebugPage } from "@/pages/debug";
-import { Layout } from "@/pages/layout";
 import { RoomPage } from "@/pages/r";
 import { renderer } from "@/pages/renderer";
+import { Page } from "@/pages/router";
 
 const app = new Hono();
 
 app.use(renderer);
 
-app.get("/", (c) => {
-  return c.render(
-    <Layout>
-      <HomePage />
-    </Layout>,
-  );
-});
-
+app.get("/", (c) => c.render(<Page id="/" />));
 app.route("/r", RoomPage);
 app.route("/debug", DebugPage);
 app.route("/counter", CounterPageRoute);
