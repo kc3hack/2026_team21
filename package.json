@@ -4,16 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "user": "pnpm --filter ./apps/user",
     "web": "pnpm --filter ./apps/web",
     "dev": "run-p dev:*",
     "dev:web": "pnpm web dev",
     "lint": "biome check",
     "lint:fix": "biome check --fix",
     "typecheck": "run-p typecheck:*",
-    "typecheck:user": "pnpm user typecheck",
+    "typecheck:web": "pnpm web typecheck",
     "test": "run-s test:*",
-    "test:user": "pnpm user test",
     "test:web": "pnpm web test",
     "preinstall": "npx only-allow pnpm"
   },
