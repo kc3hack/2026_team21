@@ -20,6 +20,9 @@ export class SignalingClient {
   constructor(private readonly url: string) {}
 
   connect(): void {
+    if (this.ws !== null) {
+      this.disconnect();
+    }
     this.ws = new WebSocket(this.url);
 
     this.ws.addEventListener("open", () => {
