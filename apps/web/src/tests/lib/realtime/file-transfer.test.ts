@@ -20,9 +20,14 @@ function createMockChannel(options?: { bufferedAmount?: number }): RTCDataChanne
 }
 
 /* ── Mock File ── */
+function toArrayBuffer(content: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(content.byteLength);
+  new Uint8Array(buffer).set(content);
+  return buffer;
+}
+
 function createMockFile(name: string, content: Uint8Array, mimeType = "application/octet-stream"): File {
-  // @ts-expect-error for testings
-  const blob = new Blob([content], { type: mimeType });
+  const blob = new Blob([toArrayBuffer(content)], { type: mimeType });
   return new File([blob], name, { type: mimeType });
 }
 
@@ -92,7 +97,7 @@ describe("sendFile", () => {
   it("MIME タイプが空の場合は application/octet-stream になる", async () => {
     const channel = createMockChannel();
     // File の type を空にするために直接作成
-    const blob = new Blob([new Uint8Array(10)], { type: "" });
+    const blob = new Blob([new ArrayBuffer(10)], { type: "" });
     const file = new File([blob], "noext", { type: "" });
 
     await sendFile(channel, file);
@@ -253,7 +258,7 @@ describe("FileReceiver", () => {
     await receiver.handleMessage(
       JSON.stringify({ type: "file-meta", name: "blob.bin", size: 6, mimeType: "application/octet-stream" }),
     );
-    const blob = new Blob([new Uint8Array([1, 2, 3, 4, 5, 6])]);
+    const blob = new Blob([toArrayBuffer(new Uint8Array([1, 2, 3, 4, 5, 6]))]);
     await receiver.handleMessage(blob);
     await receiver.handleMessage(JSON.stringify({ type: "file-end" }));
 
