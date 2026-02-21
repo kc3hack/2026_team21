@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "user": "pnpm --filter ./apps/user",
+    "web": "pnpm --filter ./apps/web",
     "dev": "run-p dev:*",
     "dev:user": "pnpm user dev",
     "lint": "biome check",
@@ -13,6 +14,7 @@
     "typecheck:user": "pnpm user typecheck",
     "test": "run-s test:*",
     "test:user": "pnpm user test",
+    "test:web": "pnpm web test",
     "preinstall": "npx only-allow pnpm"
   },
   "keywords": [],
