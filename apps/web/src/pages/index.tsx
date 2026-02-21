@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { WorkerEnv } from "@/app";
+import { DebugPage } from "@/pages/debug";
 import { Layout } from "@/pages/layout";
 import { RoomPage } from "@/pages/r";
 import { renderer } from "@/pages/renderer";
@@ -137,5 +138,6 @@ app.get("/", (c) => {
 });
 
 app.route("/room", RoomPage);
+app.route("/debug", DebugPage);
 
 export default app;
