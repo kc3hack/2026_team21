@@ -275,7 +275,8 @@ body {
   color: #5e7359;
 }
 
-.qr-mock-box {
+/* QRCode 自体のスタイルの調整は lib/qrcode/index.ts から行ってください */
+#qr-image-canvas {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -283,9 +284,14 @@ body {
   height: 150px;
   font-weight: bold;
   color: #999;
-  background-color: #f0f0f0;
-  border: 4px dashed #ccc;
-  border-radius: 1rem;
+  /* background-color: #f0f0f0; */
+  /* border: 4px dashed #ccc; */
+  /* border-radius: 1rem; */
+}
+#qr-image-canvas > canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .mock-qr-btn {
