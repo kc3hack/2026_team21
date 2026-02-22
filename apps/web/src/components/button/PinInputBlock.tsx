@@ -60,12 +60,15 @@ const pinContainerShakeStyles = css`
 `;
 
 const pinInputStyles = css`
-  width: clamp(2.1rem, 7vw, 3rem);
-  height: clamp(2.9rem, 9vw, 4rem);
+  width: clamp(2.35rem, 8vw, 3.2rem);
+  height: clamp(3rem, 9.5vw, 4rem);
   border: 3px solid #ccc;
   border-radius: 12px;
+  box-sizing: border-box;
+  padding: 0;
   text-align: center;
-  font-size: clamp(1.4rem, 4.7vw, 2rem);
+  line-height: 1;
+  font-size: clamp(1.45rem, 4.9vw, 2rem);
   font-weight: 900;
   color: #333;
   background: #f9f9f9;
@@ -87,9 +90,9 @@ const pinInputStyles = css`
   }
 
   @media (max-width: 640px) {
-    width: 2.28rem;
-    height: 3.18rem;
-    font-size: 1.45rem;
+    width: 2.65rem;
+    height: 3.3rem;
+    font-size: 1.55rem;
   }
 `;
 
