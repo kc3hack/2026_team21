@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { css, Style } from "hono/css";
-import { useEffect, useState } from "hono/jsx";
+import { useEffect, useRef, useState } from "hono/jsx";
 import { SlidingGhost } from "@/components/animations/SlidingGhost";
 import { TransferCompletePopup } from "@/components/animations/TransferCompletePopup";
 import { TransferHandoverScene } from "@/components/animations/TransferHandoverScene";
@@ -218,7 +218,6 @@ export const TopPage = () => {
     fileInputRef,
     shortcode,
     receiverJoinMethod,
-    receiverConfirmedByOk,
     closeModal,
     handleCreateRoom,
   } = useFileSenderConnection();
@@ -228,6 +227,8 @@ export const TopPage = () => {
   const [isNavigatingToReceive, setIsNavigatingToReceive] = useState(false);
   const [isEnteringFromRight, setIsEnteringFromRight] = useState(false);
   const [isEnteringFromLeft, setIsEnteringFromLeft] = useState(false);
+
+  const handoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -262,37 +263,34 @@ export const TopPage = () => {
       closeModal();
       setFlowStage("transferring");
     }
-  }, [dataChannelStatus, flowStage]);
+  }, [dataChannelStatus, flowStage, closeModal]);
 
   useEffect(() => {
-    if (flowStage !== "transferring" || !lastSentFile) {
+    // Don't interfere with handover→completed transition
+    if (flowStage === "handover") {
       return;
     }
 
-    setFlowStage("handover");
-    const timer = setTimeout(() => {
-      setFlowStage("completed");
-    }, 7600);
+    // Clear any existing timer when flow stage changes
+    if (handoverTimerRef.current) {
+      clearTimeout(handoverTimerRef.current);
+      handoverTimerRef.current = null;
+    }
 
-    return () => clearTimeout(timer);
-  }, [flowStage, lastSentFile]);
-
-  useEffect(() => {
-    if (flowStage !== "completed") {
+    if (!lastSentFile || flowStage !== "transferring") {
       return;
     }
 
-    if (receiverConfirmedByOk) {
-      window.location.href = "/";
-      return;
-    }
+    setFlowStage("completed");
+    handoverTimerRef.current = null;
 
-    const fallbackTimer = setTimeout(() => {
-      window.location.href = "/";
-    }, 5000);
-
-    return () => clearTimeout(fallbackTimer);
-  }, [flowStage, receiverConfirmedByOk]);
+    return () => {
+      if (handoverTimerRef.current) {
+        clearTimeout(handoverTimerRef.current);
+        handoverTimerRef.current = null;
+      }
+    };
+  }, [lastSentFile, flowStage]);
 
   const handleClickSelect = () => {
     fileInputRef.current?.click();
@@ -324,7 +322,32 @@ export const TopPage = () => {
     setFlowStage("idle");
   };
 
-  const handleCompleteOk = () => {
+  const handleSendSameFileAgain = () => {
+    if (!fileInputRef.current?.files?.[0]) {
+      window.location.href = "/";
+      return;
+    }
+
+    setFlowStage("qr");
+    void (async () => {
+      const created = await handleCreateRoom();
+      if (!created) {
+        setFlowStage("idle");
+      }
+    })();
+  };
+
+  const handleSendDifferentFile = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setFlowStage("idle");
+  };
+
+  const handleBackToTop = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     window.location.href = "/";
   };
 
@@ -399,10 +422,26 @@ export const TopPage = () => {
 
       <TransferCompletePopup
         open={flowStage === "completed"}
-        title="転送が完了しました。"
+        title="送信完了しました"
         message="ファイルの送信が正常に完了しました。"
         showInviteText={receiverJoinMethod === "qr"}
-        onOk={handleCompleteOk}
+        actions={[
+          {
+            label: "同じファイルをもう一度送る",
+            onClick: handleSendSameFileAgain,
+            variant: "primary",
+          },
+          {
+            label: "別のファイルを送信する",
+            onClick: handleSendDifferentFile,
+            variant: "secondary",
+          },
+          {
+            label: "トップに戻る",
+            onClick: handleBackToTop,
+            variant: "tertiary",
+          },
+        ]}
       />
 
       {isOpen && flowStage === "qr" && (
