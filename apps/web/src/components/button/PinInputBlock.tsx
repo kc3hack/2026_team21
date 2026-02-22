@@ -228,8 +228,10 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
           <input
             key={key}
             name={key}
-            type="text"
+            type="number"
             inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="one-time-code"
             maxLength={1}
             class={pinInputStyles}
             value={digits[index]}
