@@ -7,27 +7,48 @@ type Props = {
 
 export const ReceiveButton = ({ onClick }: Props) => {
   const styles = css`
-    margin-top: 1.5rem;
+    margin-top: clamp(0.85rem, 2.2vw, 1.3rem);
+    min-height: 3rem;
+    width: min(100%, 22rem);
     background: none;
     border: none;
-    padding: 0.5rem 1rem;
-    font-size: 1.5rem;
+    padding: 0.75rem 1rem;
+    font-size: clamp(1rem, 2.8vw, 1.28rem);
     font-weight: 900;
+    line-height: 1.35;
     color: white;
     cursor: pointer;
-    text-shadow: 
-      2px 2px 0 #758e6f, -2px -2px 0 #758e6f, 2px -2px 0 #758e6f,
-      -2px 2px 0 #758e6f, 0 2px 0 #758e6f, 0 -2px 0 #758e6f,
-      2px 0 0 #758e6f, -2px 0 0 #758e6f;
+    text-shadow:
+      2px 2px 0 #758e6f,
+      -2px -2px 0 #758e6f,
+      2px -2px 0 #758e6f,
+      -2px 2px 0 #758e6f,
+      0 2px 0 #758e6f,
+      0 -2px 0 #758e6f,
+      2px 0 0 #758e6f,
+      -2px 0 0 #758e6f;
     transition: transform 0.1s ease;
 
-    &:hover { transform: scale(1.1); }
-    &:active { transform: scale(0.95); }
+    &:hover {
+      transform: scale(1.04);
+    }
 
-    @media (max-width: 600px) {
-      margin-top: 1.05rem;
-      font-size: 1.68rem;
-      padding: 0.55rem 0.9rem;
+    &:active {
+      transform: scale(0.97);
+    }
+
+    &:focus-visible {
+      outline: 3px solid rgba(94, 115, 89, 0.3);
+      outline-offset: 2px;
+      border-radius: 14px;
+    }
+
+    @media (max-width: 640px) {
+      margin-top: 0.8rem;
+      min-height: 3.2rem;
+      width: min(100%, 21rem);
+      padding: 0.72rem 0.75rem;
+      font-size: 1.04rem;
     }
   `;
 

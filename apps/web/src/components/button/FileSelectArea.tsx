@@ -5,45 +5,60 @@ import { GreenButton } from "./index";
 const containerStyles = css`
   background-color: #f6ad49;
   border-radius: 32px;
-  padding: 2rem 1.5rem;
+  padding: clamp(1.1rem, 3vw, 1.9rem) clamp(1rem, 3.8vw, 1.5rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.9rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 26.5rem;
   margin: 0 auto;
 
-  /* モバイル対応：さらにコンパクトに */
-  @media (max-width: 600px) {
-    width: min(94vw, 21rem);
-    max-width: 21rem;
-    padding: 1.45rem 1.1rem;
-    gap: 0.65rem;
-    border-width: 4px;
+  @media (max-width: 768px) {
+    width: min(95vw, 23rem);
+    max-width: 23rem;
+    border-radius: 26px;
+  }
+
+  @media (max-width: 640px) {
+    width: min(95vw, 22rem);
+    max-width: 22rem;
+    padding: 1.2rem 0.95rem;
+    gap: 0.7rem;
+    border-radius: 22px;
   }
 `;
 
 const dropZoneStyles = css`
   width: 100%;
   background-color: #fff;
-  border: 4px dotted #758e6f; 
+  border: 4px dotted #758e6f;
   border-radius: 20px;
-  padding: 2.5rem 1rem;
+  padding: clamp(1.2rem, 4vw, 2.2rem) 1rem;
+  min-height: 9.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
   color: #000;
   font-weight: 900;
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 2.8vw, 1.15rem);
+  line-height: 1.4;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
   box-sizing: border-box;
+  text-align: center;
 
-  @media (max-width: 600px) {
-    padding: 1.7rem 0.7rem;
-    font-size: 1.08rem;
+  &:focus-visible {
+    outline: 3px solid rgba(117, 142, 111, 0.32);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    min-height: 8.6rem;
+    border-radius: 18px;
+    padding: 1.35rem 0.7rem;
+    font-size: 1rem;
   }
 
   &:hover {
@@ -54,6 +69,23 @@ const dropZoneStyles = css`
   }
 `;
 
+const iconStyles = css`
+  font-size: clamp(2rem, 6vw, 2.4rem);
+  margin-bottom: 0.1rem;
+`;
+
+const separatorStyles = css`
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(0.98rem, 2.6vw, 1.08rem);
+`;
+
+const buttonShellStyles = css`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+`;
+
 type Props = {
   onSelect: () => void;
 };
@@ -62,14 +94,14 @@ export const FileSelectArea = ({ onSelect }: Props) => {
   return (
     <div class={containerStyles}>
       <button type="button" class={dropZoneStyles} onClick={onSelect}>
-        <span style="font-size: 2.5rem; margin-bottom: 0.25rem;">📁</span>
+        <span class={iconStyles}>📁</span>
         <span>ここにファイルをドロップ</span>
       </button>
 
-      <span style="color: #fff; font-weight: bold; font-size: 1.1rem;">または</span>
+      <span class={separatorStyles}>または</span>
 
-      <div style="width: 100%; display: flex; justify-content: center; transform: scale(0.8);" class="file-select-btn">
-        <GreenButton text="ファイルを選択" onClick={onSelect} />
+      <div class={buttonShellStyles}>
+        <GreenButton text="ファイルを選択" onClick={onSelect} fullWidth />
       </div>
     </div>
   );

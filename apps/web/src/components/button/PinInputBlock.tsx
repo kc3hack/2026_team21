@@ -5,52 +5,55 @@ const containerStyles = css`
   background-color: #fff;
   border: 6px solid #f6ad49;
   border-radius: 32px;
-  padding: 2.5rem 1.5rem;
+  padding: 2.2rem 1.35rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.2rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 26.25rem;
   margin: 0 auto;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
+    width: min(95vw, 23rem);
+    max-width: 23rem;
+    border-radius: 26px;
+  }
+
+  @media (max-width: 640px) {
     width: min(95vw, 22.4rem);
     max-width: 22.4rem;
     padding: 1.65rem 1.15rem;
     border-width: 4px;
+    border-radius: 22px;
   }
 `;
 
 const titleStyles = css`
   color: #f6ad49;
   font-weight: 900;
-  font-size: 1.5rem;
+  font-size: clamp(1.16rem, 3.2vw, 1.4rem);
   margin: 0;
-
-  @media (max-width: 600px) {
-    font-size: 1.2rem;
-  }
 `;
 
 const pinContainerStyles = css`
   display: flex;
   width: 100%;
-  gap: 0.5rem;
+  gap: 0.45rem;
   justify-content: center;
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     gap: 0.38rem;
   }
 `;
 
 const pinInputStyles = css`
-  width: 3rem;
-  height: 4rem;
+  width: clamp(2.1rem, 7vw, 3rem);
+  height: clamp(2.9rem, 9vw, 4rem);
   border: 3px solid #ccc;
   border-radius: 12px;
   text-align: center;
-  font-size: 2rem;
+  font-size: clamp(1.4rem, 4.7vw, 2rem);
   font-weight: 900;
   color: #333;
   background: #f9f9f9;
@@ -63,7 +66,7 @@ const pinInputStyles = css`
     background: #fff;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     width: 2.28rem;
     height: 3.18rem;
     font-size: 1.45rem;
@@ -71,16 +74,23 @@ const pinInputStyles = css`
 `;
 
 const submitButtonStyles = css`
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   background: #f6ad49;
   color: white;
   border: none;
-  padding: 0.8rem 2rem;
-  border-radius: 2rem;
+  width: min(100%, 15rem);
+  min-height: 3rem;
+  padding: 0.72rem 1rem;
+  border-radius: 9999px;
   font-weight: 900;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1.02rem;
   transition: transform 0.1s ease, opacity 0.2s ease;
+
+  &:focus-visible {
+    outline: 3px solid rgba(246, 173, 73, 0.32);
+    outline-offset: 2px;
+  }
 
   &:active {
     transform: scale(0.97);
@@ -89,6 +99,12 @@ const submitButtonStyles = css`
   &:disabled {
     opacity: 0.55;
     cursor: default;
+  }
+
+  @media (max-width: 640px) {
+    width: 100%;
+    min-height: 3.2rem;
+    font-size: 1rem;
   }
 `;
 
