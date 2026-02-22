@@ -329,6 +329,7 @@ export const ReceivePage = () => {
   const [isMoving, setIsMoving] = useState(false);
   const [isResolvingPin, setIsResolvingPin] = useState(false);
   const [pinError, setPinError] = useState("");
+  const pinGuideMessage = "送信側で発行された6桁の番号を\n入力してください";
 
   const findRoomIdByShortCode = async (shortcode: string) => {
     const validate = await apiClient.rooms[":shortcode"].$get({
@@ -362,7 +363,7 @@ export const ReceivePage = () => {
       window.location.href = `${window.location.origin}/r/${encodeURIComponent(roomId)}?source=code`;
     } catch (error) {
       console.error(error);
-      setPinError("6桁の番号が見つかりませんでした。番号を再確認してください。");
+      setPinError(pinGuideMessage);
     } finally {
       setIsResolvingPin(false);
     }
@@ -381,9 +382,15 @@ export const ReceivePage = () => {
 
         <PinInputBlock
           onSubmit={handleSubmitPin}
+          onAnyInput={() => {
+            if (!pinError) {
+              return;
+            }
+            setPinError("");
+          }}
           isSubmitting={isResolvingPin}
           errorMessage={pinError}
-          helperMessage={"送信側で発行された6桁の番号を\n入力してください"}
+          helperMessage={pinGuideMessage}
         />
 
         <SendBackButton onClick={handleSendClick} />

@@ -1,5 +1,5 @@
-import { css } from "hono/css";
-import { useRef, useState } from "hono/jsx";
+import { css, keyframes } from "hono/css";
+import { useEffect, useRef, useState } from "hono/jsx";
 
 const containerStyles = css`
   background-color: #fff;
@@ -36,6 +36,14 @@ const titleStyles = css`
   margin: 0;
 `;
 
+const shake = keyframes`
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+`;
+
 const pinContainerStyles = css`
   display: flex;
   width: 100%;
@@ -47,17 +55,32 @@ const pinContainerStyles = css`
   }
 `;
 
+const pinContainerShakeStyles = css`
+  animation: ${shake} 0.35s ease-in-out;
+`;
+
 const pinInputStyles = css`
-  width: clamp(2.1rem, 7vw, 3rem);
-  height: clamp(2.9rem, 9vw, 4rem);
+  width: clamp(2.35rem, 8vw, 3.2rem);
+  height: clamp(3rem, 9.5vw, 4rem);
   border: 3px solid #ccc;
   border-radius: 12px;
+  box-sizing: border-box;
+  padding: 0;
   text-align: center;
-  font-size: clamp(1.4rem, 4.7vw, 2rem);
+  line-height: 1;
+  font-size: clamp(1.45rem, 4.9vw, 2rem);
   font-weight: 900;
   color: #333;
   background: #f9f9f9;
   transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: textfield;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 
   &:focus {
     outline: none;
@@ -67,44 +90,20 @@ const pinInputStyles = css`
   }
 
   @media (max-width: 640px) {
-    width: 2.28rem;
-    height: 3.18rem;
-    font-size: 1.45rem;
+    width: 2.65rem;
+    height: 3.3rem;
+    font-size: 1.55rem;
   }
 `;
 
-const submitButtonStyles = css`
-  margin-top: 0.25rem;
-  background: #f6ad49;
-  color: white;
-  border: none;
-  width: min(100%, 15rem);
-  min-height: 3rem;
-  padding: 0.72rem 1rem;
-  border-radius: 9999px;
-  font-weight: 900;
-  cursor: pointer;
-  font-size: 1.02rem;
-  transition: transform 0.1s ease, opacity 0.2s ease;
+const pinInputErrorStyles = css`
+  border-color: #d85f39;
+  background: #fff3ef;
 
-  &:focus-visible {
-    outline: 3px solid rgba(246, 173, 73, 0.32);
-    outline-offset: 2px;
-  }
-
-  &:active {
-    transform: scale(0.97);
-  }
-
-  &:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
-
-  @media (max-width: 640px) {
-    width: 100%;
-    min-height: 3.2rem;
-    font-size: 1rem;
+  &:focus {
+    border-color: #d85f39;
+    box-shadow: 0 0 0 4px rgba(216, 95, 57, 0.2);
+    background: #fff;
   }
 `;
 
@@ -137,11 +136,19 @@ type Props = {
   isSubmitting?: boolean;
   errorMessage?: string;
   helperMessage?: string;
+  onAnyInput?: () => void;
 };
 
-export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "", helperMessage = "" }: Props) => {
+export const PinInputBlock = ({
+  onSubmit,
+  isSubmitting = false,
+  errorMessage = "",
+  helperMessage = "",
+  onAnyInput,
+}: Props) => {
   const [digits, setDigits] = useState<string[]>(Array.from({ length: PIN_INPUT_KEYS.length }, () => ""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const lastAutoSubmittedPinRef = useRef<string | null>(null);
 
   const pin = digits.join("");
   const canSubmit = pin.length === PIN_INPUT_KEYS.length && !isSubmitting;
@@ -168,6 +175,7 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
+    onAnyInput?.();
 
     const raw = target.value.replace(/\D/g, "");
     if (!raw) {
@@ -206,6 +214,7 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     if (!onlyDigits) {
       return;
     }
+    onAnyInput?.();
 
     const next = Array.from({ length: PIN_INPUT_KEYS.length }, (_, index) => onlyDigits[index] ?? "");
     setDigits(next);
@@ -219,19 +228,35 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     submitIfPossible();
   };
 
+  useEffect(() => {
+    if (pin.length !== PIN_INPUT_KEYS.length) {
+      lastAutoSubmittedPinRef.current = null;
+      return;
+    }
+
+    if (isSubmitting || lastAutoSubmittedPinRef.current === pin) {
+      return;
+    }
+
+    lastAutoSubmittedPinRef.current = pin;
+    void Promise.resolve(onSubmit(pin));
+  }, [pin, isSubmitting, onSubmit]);
+
   return (
     <form action="" class={containerStyles} onSubmit={handleSubmit}>
       <p class={titleStyles}>6桁の番号を入力</p>
 
-      <div class={pinContainerStyles}>
+      <div class={`${pinContainerStyles} ${errorMessage ? pinContainerShakeStyles : ""}`}>
         {PIN_INPUT_KEYS.map((key, index) => (
           <input
             key={key}
             name={key}
-            type="text"
+            type="number"
             inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="one-time-code"
             maxLength={1}
-            class={pinInputStyles}
+            class={`${pinInputStyles} ${errorMessage ? pinInputErrorStyles : ""}`}
             value={digits[index]}
             onInput={(e) => handleInput(index, e)}
             onKeyDown={(e) => handleKeyDown(index, e)}
@@ -246,12 +271,11 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
         ))}
       </div>
 
-      <button type="submit" class={submitButtonStyles} disabled={!canSubmit}>
-        {isSubmitting ? "確認中..." : "受信する"}
-      </button>
-
-      {helperMessage && <p class={helperTextStyles}>{helperMessage}</p>}
-      {errorMessage && <p class={errorStyles}>{errorMessage}</p>}
+      {errorMessage ? (
+        <p class={errorStyles}>{errorMessage}</p>
+      ) : (
+        helperMessage && <p class={helperTextStyles}>{helperMessage}</p>
+      )}
     </form>
   );
 };
