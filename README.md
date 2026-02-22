@@ -4,8 +4,11 @@
   <a href="https://direct.yaken.org/">
     <img src="./docs/hero.png" height="245">
   </a>
+  <br/>
+  <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/kc3hack/2026_team21/tree/develop/apps/web">
+    <img src="https://deploy.workers.cloudflare.com/button"/>
+  </a>
 </p>
-
 
 ## チーム名
 チーム21 Yaken'
