@@ -56,7 +56,7 @@ Directファイル便はブラウザ上で動作するため、追加のアプ�
 また、Windows / macOS / Linux / iOS / Androidなど幅広い端末で使用できます。
 
 ## 操作説明・デモ動画
-[デモ動画はこちら](https://www.youtube.com/watch?v=fbzGp0XJGq8)
+[デモ動画はこちら](https://drive.google.com/drive/folders/1QTGRQl1wPtYAsyJJnuEMFC2c4nNfHhzG?usp=drive_link)
 <!-- 開発したプロダクトの操作説明について入力してください。また、操作説明デモ動画があれば、埋め込みやリンクを記載してください -->
 
 
