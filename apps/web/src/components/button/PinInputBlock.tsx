@@ -1,5 +1,5 @@
 import { css } from "hono/css";
-import { useRef, useState } from "hono/jsx";
+import { useEffect, useRef, useState } from "hono/jsx";
 
 const containerStyles = css`
   background-color: #fff;
@@ -81,41 +81,6 @@ const pinInputStyles = css`
   }
 `;
 
-const submitButtonStyles = css`
-  margin-top: 0.25rem;
-  background: #f6ad49;
-  color: white;
-  border: none;
-  width: min(100%, 15rem);
-  min-height: 3rem;
-  padding: 0.72rem 1rem;
-  border-radius: 9999px;
-  font-weight: 900;
-  cursor: pointer;
-  font-size: 1.02rem;
-  transition: transform 0.1s ease, opacity 0.2s ease;
-
-  &:focus-visible {
-    outline: 3px solid rgba(246, 173, 73, 0.32);
-    outline-offset: 2px;
-  }
-
-  &:active {
-    transform: scale(0.97);
-  }
-
-  &:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
-
-  @media (max-width: 640px) {
-    width: 100%;
-    min-height: 3.2rem;
-    font-size: 1rem;
-  }
-`;
-
 const errorStyles = css`
   margin: 0;
   color: #d85f39;
@@ -150,6 +115,7 @@ type Props = {
 export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "", helperMessage = "" }: Props) => {
   const [digits, setDigits] = useState<string[]>(Array.from({ length: PIN_INPUT_KEYS.length }, () => ""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const lastAutoSubmittedPinRef = useRef<string | null>(null);
 
   const pin = digits.join("");
   const canSubmit = pin.length === PIN_INPUT_KEYS.length && !isSubmitting;
@@ -227,6 +193,20 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     submitIfPossible();
   };
 
+  useEffect(() => {
+    if (pin.length !== PIN_INPUT_KEYS.length) {
+      lastAutoSubmittedPinRef.current = null;
+      return;
+    }
+
+    if (isSubmitting || lastAutoSubmittedPinRef.current === pin) {
+      return;
+    }
+
+    lastAutoSubmittedPinRef.current = pin;
+    void Promise.resolve(onSubmit(pin));
+  }, [pin, isSubmitting, onSubmit]);
+
   return (
     <form action="" class={containerStyles} onSubmit={handleSubmit}>
       <p class={titleStyles}>6桁の番号を入力</p>
@@ -255,10 +235,6 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
           />
         ))}
       </div>
-
-      <button type="submit" class={submitButtonStyles} disabled={!canSubmit}>
-        {isSubmitting ? "確認中..." : "受信する"}
-      </button>
 
       {helperMessage && <p class={helperTextStyles}>{helperMessage}</p>}
       {errorMessage && <p class={errorStyles}>{errorMessage}</p>}
