@@ -1,4 +1,4 @@
-import { css } from "hono/css";
+import { css, keyframes } from "hono/css";
 import { useEffect, useRef, useState } from "hono/jsx";
 
 const containerStyles = css`
@@ -36,6 +36,14 @@ const titleStyles = css`
   margin: 0;
 `;
 
+const shake = keyframes`
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+`;
+
 const pinContainerStyles = css`
   display: flex;
   width: 100%;
@@ -45,6 +53,10 @@ const pinContainerStyles = css`
   @media (max-width: 640px) {
     gap: 0.38rem;
   }
+`;
+
+const pinContainerShakeStyles = css`
+  animation: ${shake} 0.35s ease-in-out;
 `;
 
 const pinInputStyles = css`
@@ -211,7 +223,7 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     <form action="" class={containerStyles} onSubmit={handleSubmit}>
       <p class={titleStyles}>6桁の番号を入力</p>
 
-      <div class={pinContainerStyles}>
+      <div class={`${pinContainerStyles} ${errorMessage ? pinContainerShakeStyles : ""}`}>
         {PIN_INPUT_KEYS.map((key, index) => (
           <input
             key={key}
