@@ -63,6 +63,7 @@ const popupClass = css`
     color: #fff;
     font-size: 1rem;
     font-weight: 900;
+    min-height: 3rem;
     padding: 0.76rem 2.35rem;
     cursor: pointer;
     transition: transform 0.1s ease, background 0.2s ease;
@@ -90,10 +91,17 @@ const popupClass = css`
     color: #fff;
     font-size: 0.98rem;
     font-weight: 900;
+    min-height: 3rem;
     padding: 0.76rem 1.5rem;
     cursor: pointer;
     transition: transform 0.1s ease, background 0.2s ease;
     width: 100%;
+  }
+
+  .popup-ok:focus-visible,
+  .popup-action-btn:focus-visible {
+    outline: 3px solid rgba(117, 142, 111, 0.3);
+    outline-offset: 2px;
   }
 
   .popup-action-btn.primary {
@@ -124,7 +132,7 @@ const popupClass = css`
     transform: scale(0.97);
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     .popup-card {
       width: min(92vw, 22rem);
       padding: 1.4rem 1.2rem;
@@ -140,7 +148,13 @@ const popupClass = css`
 
     .popup-action-btn {
       font-size: 0.92rem;
+      min-height: 3.1rem;
       padding: 0.68rem 1.2rem;
+    }
+
+    .popup-ok {
+      min-height: 3.1rem;
+      width: 100%;
     }
   }
 `;

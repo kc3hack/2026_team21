@@ -39,21 +39,26 @@ const responsiveWrapper = css`
   position: relative;
   overflow: hidden;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #fcf8e3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 1.2rem;
+  padding: 0 1rem calc(1.2rem + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 
   & .logo-area {
     position: relative;
     top: 0;
   }
 
-  @media (max-width: 600px) {
-    min-height: 100dvh;
-    padding: 0.4rem 0.9rem calc(4.4rem + env(safe-area-inset-bottom, 0px));
-    box-sizing: border-box;
+  @media (max-width: 900px) {
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+  }
+
+  @media (max-width: 640px) {
+    padding: 0.3rem 0.8rem calc(2.6rem + env(safe-area-inset-bottom, 0px));
   }
 `;
 
@@ -65,7 +70,12 @@ const topSectionClass = css`
   align-items: flex-start;
   z-index: 120;
 
-  @media (max-width: 600px) {
+  @media (max-width: 900px) {
+    flex: 0 0 auto;
+    margin-top: 0.35rem;
+  }
+
+  @media (max-width: 640px) {
     flex: 0 0 auto;
     margin-top: 0.25rem;
   }
@@ -75,16 +85,21 @@ const centerSectionClass = css`
   z-index: 100;
   text-align: center;
   width: 100%;
-  max-width: 34rem;
+  max-width: 36rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 0.8rem;
   margin: 1rem 0;
   box-sizing: border-box;
 
-  @media (max-width: 600px) {
-    max-width: 23.5rem;
+  @media (max-width: 900px) {
+    max-width: 30rem;
+    margin: 0.7rem 0;
+  }
+
+  @media (max-width: 640px) {
+    max-width: 24rem;
     padding: 0 0.4rem;
     margin: 0.35rem 0;
   }
@@ -94,20 +109,20 @@ const spacerClass = css`
   flex: 1;
   width: 100%;
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     min-height: 1.8rem;
   }
 `;
 
 const stageTextClass = css`
-  margin: 1rem 0 0;
+  margin: 0.9rem 0 0;
   color: #5e7359;
-  font-size: 1.08rem;
+  font-size: clamp(0.96rem, 2.3vw, 1.06rem);
   font-weight: 900;
   text-align: center;
   line-height: 1.55;
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     margin-top: 0.7rem;
     font-size: 0.94rem;
     line-height: 1.45;
@@ -115,13 +130,13 @@ const stageTextClass = css`
 `;
 
 const errorTextClass = css`
-  margin: 1rem 0 0;
+  margin: 0.9rem 0 0;
   color: #d85f39;
-  font-size: 0.95rem;
+  font-size: clamp(0.9rem, 2.2vw, 0.95rem);
   font-weight: 800;
   text-align: center;
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     margin-top: 0.7rem;
     font-size: 0.86rem;
   }
@@ -137,7 +152,7 @@ const qrModalClass = css`
   padding: 1.8rem 1.6rem;
   border: 6px solid #333;
   border-radius: 24px;
-  width: min(90vw, 26rem);
+  width: min(92vw, 27rem);
   text-align: center;
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
 
@@ -178,11 +193,17 @@ const qrModalClass = css`
     color: #fff;
     font-size: 0.95rem;
     font-weight: 900;
-    padding: 0.55rem 1.4rem;
+    min-height: 3rem;
+    padding: 0.55rem 1.45rem;
     cursor: pointer;
   }
 
-  @media (max-width: 600px) {
+  .close-btn:focus-visible {
+    outline: 3px solid rgba(117, 142, 111, 0.3);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
     width: min(92vw, 20rem);
     padding: 1.2rem 1rem;
     border-width: 5px;
@@ -203,6 +224,12 @@ const qrModalClass = css`
       min-width: 7.4rem;
       padding: 0.35rem 0.9rem;
       margin-top: 0.65rem;
+    }
+
+    .close-btn {
+      min-height: 3.1rem;
+      width: 100%;
+      margin-top: 0.9rem;
     }
   }
 `;

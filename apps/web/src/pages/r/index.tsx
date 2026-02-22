@@ -14,21 +14,26 @@ const responsiveWrapper = css`
   position: relative;
   overflow: hidden;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #fcf8e3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 1.2rem;
+  padding: 0 1rem calc(1.2rem + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 
   & .logo-area {
     position: relative;
     top: 0;
   }
 
-  @media (max-width: 600px) {
-    min-height: 100dvh;
-    padding: 0.4rem 0.9rem calc(4.7rem + env(safe-area-inset-bottom, 0px));
-    box-sizing: border-box;
+  @media (max-width: 900px) {
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+  }
+
+  @media (max-width: 640px) {
+    padding: 0.3rem 0.8rem calc(2.8rem + env(safe-area-inset-bottom, 0px));
   }
 `;
 
@@ -40,7 +45,12 @@ const topSectionClass = css`
   align-items: flex-start;
   z-index: 120;
 
-  @media (max-width: 600px) {
+  @media (max-width: 900px) {
+    flex: 0 0 auto;
+    margin-top: 0.35rem;
+  }
+
+  @media (max-width: 640px) {
     flex: 0 0 auto;
     margin-top: 0.25rem;
   }
@@ -50,16 +60,21 @@ const centerSectionClass = css`
   z-index: 100;
   text-align: center;
   width: 100%;
-  max-width: 34rem;
+  max-width: 36rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 0.8rem;
   margin: 1rem 0;
   box-sizing: border-box;
 
-  @media (max-width: 600px) {
-    max-width: 25rem;
+  @media (max-width: 900px) {
+    max-width: 30rem;
+    margin: 0.7rem 0;
+  }
+
+  @media (max-width: 640px) {
+    max-width: 24rem;
     padding: 0 0.4rem;
     margin: 0.35rem 0;
   }
@@ -69,7 +84,7 @@ const spacerClass = css`
   flex: 1;
   width: 100%;
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     min-height: 1.8rem;
   }
 `;
@@ -77,17 +92,17 @@ const spacerClass = css`
 const receiveHeadingClass = css`
   color: #f6ad49;
   font-weight: 900;
-  font-size: 2rem;
-  margin: 0 0 2rem;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  margin: 0 0 1.35rem;
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     font-size: 1.62rem;
     margin-bottom: 0.95rem;
   }
 `;
 
 const waitCardClass = css`
-  width: min(90vw, 27rem);
+  width: min(92vw, 27rem);
   background: #fff;
   border: 5px solid #f6ad49;
   border-radius: 24px;
@@ -148,7 +163,7 @@ const waitCardClass = css`
     font-weight: 800;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     width: min(94vw, 22.6rem);
     border-radius: 18px;
     border-width: 4px;
