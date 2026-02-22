@@ -93,6 +93,17 @@ const pinInputStyles = css`
   }
 `;
 
+const pinInputErrorStyles = css`
+  border-color: #d85f39;
+  background: #fff3ef;
+
+  &:focus {
+    border-color: #d85f39;
+    box-shadow: 0 0 0 4px rgba(216, 95, 57, 0.2);
+    background: #fff;
+  }
+`;
+
 const errorStyles = css`
   margin: 0;
   color: #d85f39;
@@ -242,7 +253,7 @@ export const PinInputBlock = ({
             pattern="[0-9]*"
             autoComplete="one-time-code"
             maxLength={1}
-            class={pinInputStyles}
+            class={`${pinInputStyles} ${errorMessage ? pinInputErrorStyles : ""}`}
             value={digits[index]}
             onInput={(e) => handleInput(index, e)}
             onKeyDown={(e) => handleKeyDown(index, e)}
