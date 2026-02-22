@@ -271,7 +271,11 @@ export const PinInputBlock = ({
         ))}
       </div>
 
-      {errorMessage ? <p class={errorStyles}>{errorMessage}</p> : helperMessage && <p class={helperTextStyles}>{helperMessage}</p>}
+      {errorMessage ? (
+        <p class={errorStyles}>{errorMessage}</p>
+      ) : (
+        helperMessage && <p class={helperTextStyles}>{helperMessage}</p>
+      )}
     </form>
   );
 };
