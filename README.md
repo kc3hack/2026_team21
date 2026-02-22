@@ -36,7 +36,7 @@ QRコードを読み取るか、コードを入力するだけで即座に接続
 ### 高い機密性
 ファイルデータはサーバーにアップロードされません。
 サーバーは接続の仲介のみを行い、実際のデータは送信者から受信者へ直接転送されます。
-また、ファイルの送信経路はDTLSによって暗号化されるため安心です。
+また、ファイルの送信経路はDTLSによってエンドツーエンドで暗号化されるため安心です。
 
 ### 高速性
 従来のファイル転送サービスは、一度ファイルをサーバーにアップロードしてから受信者がダウンロードするという方式でした。
@@ -62,11 +62,9 @@ Directファイル便はブラウザ上で動作するため、追加のアプ�
 ### その他
 
 ## 使用技術
-
-<!-- 使用技術を入力してください -->
-
-
-<!--
-markdownの記法はこちらを参照してください！
-https://docs.github.com/ja/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
--->
+- Cloudflare Workers
+- Cloudflare Workers KV
+- Cloudflare Workers DurableObject
+- Cloudflare RealtimeKit
+- Hono
+- pnpm
