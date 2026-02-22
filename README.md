@@ -1,6 +1,11 @@
 # Directファイル便
 
-![Directファイル便](https://kc3.me/cms/wp-content/uploads/2026/02/444e7120d5cdd74aa75f7a94bf8821a5-scaled.png)
+<p align="center">
+  <a href="https://direct.yaken.org/">
+    <img src="./docs/hero.png" height="245">
+  </a>
+</p>
+
 
 ## チーム名
 チーム21 Yaken'
