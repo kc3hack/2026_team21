@@ -1,14 +1,9 @@
-# プロダクト名
-<!-- プロダクト名に変更してください -->
+# Directファイル便
 
-![プロダクト名](https://kc3.me/cms/wp-content/uploads/2026/02/444e7120d5cdd74aa75f7a94bf8821a5-scaled.png)
-<!-- プロダクト名・イメージ画像を差し変えてください -->
-
+![Directファイル便](https://kc3.me/cms/wp-content/uploads/2026/02/444e7120d5cdd74aa75f7a94bf8821a5-scaled.png)
 
 ## チーム名
-チーム○ XXXX
-<!-- チームIDとチーム名を入力してください -->
-
+チーム21 Yaken'
 
 ## 背景・課題・解決されること
 
