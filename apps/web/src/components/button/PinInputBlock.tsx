@@ -122,9 +122,16 @@ type Props = {
   isSubmitting?: boolean;
   errorMessage?: string;
   helperMessage?: string;
+  onAnyInput?: () => void;
 };
 
-export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "", helperMessage = "" }: Props) => {
+export const PinInputBlock = ({
+  onSubmit,
+  isSubmitting = false,
+  errorMessage = "",
+  helperMessage = "",
+  onAnyInput,
+}: Props) => {
   const [digits, setDigits] = useState<string[]>(Array.from({ length: PIN_INPUT_KEYS.length }, () => ""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const lastAutoSubmittedPinRef = useRef<string | null>(null);
@@ -154,6 +161,7 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
+    onAnyInput?.();
 
     const raw = target.value.replace(/\D/g, "");
     if (!raw) {
@@ -192,6 +200,7 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
     if (!onlyDigits) {
       return;
     }
+    onAnyInput?.();
 
     const next = Array.from({ length: PIN_INPUT_KEYS.length }, (_, index) => onlyDigits[index] ?? "");
     setDigits(next);
@@ -248,8 +257,7 @@ export const PinInputBlock = ({ onSubmit, isSubmitting = false, errorMessage = "
         ))}
       </div>
 
-      {helperMessage && <p class={helperTextStyles}>{helperMessage}</p>}
-      {errorMessage && <p class={errorStyles}>{errorMessage}</p>}
+      {errorMessage ? <p class={errorStyles}>{errorMessage}</p> : helperMessage && <p class={helperTextStyles}>{helperMessage}</p>}
     </form>
   );
 };
