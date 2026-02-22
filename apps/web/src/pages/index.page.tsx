@@ -445,7 +445,7 @@ export const TopPage = () => {
           enteringFromLeft={isEnteringFromLeft}
           wakeEyesOnMove={useWakeEyesOnMove}
           slowMove={flowStage === "transferring"}
-          mobilePlacement={flowStage === "idle" && !isNavigatingToReceive ? "button" : "bottom"}
+          mobilePlacement="bottom"
         />
       )}
 
