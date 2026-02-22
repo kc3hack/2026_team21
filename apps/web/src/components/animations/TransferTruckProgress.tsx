@@ -72,10 +72,11 @@ const truckProgressClass = css`
 
   .front-tire {
     width: 22%;
-    bottom: 47%;
+    bottom: 8%;
     right: 40%;
     transform: scale(5.5);
     transform-origin: center center;
+    z-index: 9;
   }
 
   .truck-anchor.is-active .track-wrapper {
