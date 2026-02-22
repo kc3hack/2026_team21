@@ -114,6 +114,18 @@ const spacerClass = css`
   }
 `;
 
+const sendHeadingClass = css`
+  color: #537054;
+  font-weight: 900;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  margin: 0 0 1.35rem;
+
+  @media (max-width: 640px) {
+    font-size: 1.62rem;
+    margin-bottom: 0.95rem;
+  }
+`;
+
 const stageTextClass = css`
   margin: 0.9rem 0 0;
   color: #5e7359;
@@ -403,6 +415,7 @@ export const TopPage = () => {
       <div class={centerSectionClass}>
         {flowStage === "idle" && !isNavigatingToReceive && (
           <>
+            <h1 class={sendHeadingClass}>ファイルを送信する</h1>
             <FileSelectArea onSelect={handleClickSelect} />
             <ReceiveButton onClick={handleReceiveClick} />
           </>
