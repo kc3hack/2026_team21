@@ -5,7 +5,7 @@
     <img src="./docs/hero.png" height="245">
   </a>
   <br/>
-  <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/kc3hack/2026_team21/tree/develop/apps/web">
+  <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/yaken-org/charm/tree/develop/apps/web">
     <img src="https://deploy.workers.cloudflare.com/button"/>
   </a>
 </p>
